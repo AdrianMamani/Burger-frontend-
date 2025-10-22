@@ -11,33 +11,21 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
   const [cupones, setCupones] = useState([]);
   const [couponCodes, setCouponCodes] = useState({});
   const [metodoPago, setMetodoPago] = useState("efectivo");
-  const [tipoEntrega, setTipoEntrega] = useState("delivery");
 
-  // Datos del cliente
+  // 🔸 Por defecto: Recojo en tienda
+  const [tipoEntrega, setTipoEntrega] = useState("recojo");
+
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [direccion, setDireccion] = useState("");
   const [mesa, setMesa] = useState("");
   const [observacion, setObservacion] = useState("");
 
-  // 📞 Teléfono de la empresa desde la API
-  const [telefonoEmpresa, setTelefonoEmpresa] = useState("");
-
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/cupon")
       .then((res) => res.json())
       .then((data) => setCupones(data))
       .catch((err) => console.error("Error al obtener cupones:", err));
-
-    // Obtener teléfono de la empresa
-    fetch("https://apiricoton.cartavirtual.shop/api/empresa")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.telefono) {
-          setTelefonoEmpresa(data.telefono);
-        }
-      })
-      .catch((err) => console.error("Error al obtener empresa:", err));
   }, []);
 
   const increaseQty = (id) => {
@@ -96,7 +84,9 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
 
     setCart((prev) =>
       prev.map((p) =>
-        p.id_producto === product.id_producto ? { ...p, cupon, descuento } : p
+        p.id_producto === product.id_producto
+          ? { ...p, cupon, descuento }
+          : p
       )
     );
 
@@ -110,11 +100,6 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
   const enviarPedido = () => {
     if (!nombre || !telefono) {
       alert("Por favor complete nombre y teléfono.");
-      return;
-    }
-
-    if (!telefonoEmpresa) {
-      alert("No se encontró el número de la empresa.");
       return;
     }
 
@@ -134,16 +119,14 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
     mensaje += `%0A--- Productos --- %0A`;
     cart.forEach((p) => {
       mensaje += `• ${p.nombre} x${p.cantidad} - S/.${(
-        p.precio * p.cantidad -
-        (p.descuento || 0)
+        p.precio * p.cantidad - (p.descuento || 0)
       ).toFixed(2)}%0A`;
       if (p.cupon) mensaje += `   Cupón: ${p.cupon.codigo}%0A`;
     });
 
     mensaje += `%0ATotal: S/. ${subtotal}`;
 
-    // Usa el teléfono de la API
-    const url = `https://wa.me/51${telefonoEmpresa}?text=${mensaje}`;
+    const url = `https://wa.me/51934629203?text=${mensaje}`;
     window.open(url, "_blank");
   };
 
@@ -154,7 +137,7 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
       }`}
     >
       <div
-        className={`relative pt-16 lg:pt-8 p-6 h-full flex flex-col ${textDefault}`}
+        className={`relative pt-16 lg:pt-8 p-6 h-full flex flex-col overflow-y-auto ${textDefault}`}
       >
         <RiCloseLine
           onClick={() => setShowOrder(false)}
@@ -162,20 +145,17 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
         />
         <h1 className="text-2xl font-bold mb-4">Mi Carrito</h1>
 
-        {/* Lista de productos con scroll */}
-        <div
-          className="flex-1 overflow-y-auto pr-2 mb-6"
-          style={{ maxHeight: "260px" }}
-        >
+        {/* Productos */}
+        <div className="flex-1 pr-2 mb-6">
           {cart.map((product) => (
             <div
               key={product.id_producto}
               className={`${bgProduct} p-4 rounded-xl flex flex-col gap-3 mb-3`}
             >
-              <div className="flex gap-4 items-center">
+              <div className="flex gap-4">
                 <img
                   src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
-                  className="w-28 h-24 object-cover rounded-lg transition-transform duration-300 hover:scale-110"
+                  className="w-28 h-24 object-cover rounded-lg"
                   alt={product.nombre}
                 />
                 <div className="flex flex-col justify-between">
@@ -233,7 +213,7 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
           ))}
         </div>
 
-        {/* Métodos de pago */}
+        {/* Métodos de pago y entrega */}
         <div className={`${bgProduct} p-4 rounded-lg mb-4`}>
           <h2 className="font-semibold mb-2">Método de pago</h2>
           <div className="flex flex-wrap gap-3 mb-3">
@@ -246,8 +226,8 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
               <button
                 key={m.id}
                 onClick={() => setMetodoPago(m.id)}
-                className={`p-2 rounded-lg transition-transform transform hover:scale-120 ${
-                  metodoPago === m.id ? "bg-[#ffff]" : "bg-gray-100"
+                className={`p-2 rounded-lg transition-transform transform hover:scale-110 ${
+                  metodoPago === m.id ? "bg-white" : "bg-gray-100"
                 }`}
               >
                 <img
@@ -259,30 +239,46 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
             ))}
           </div>
 
+          {/* 🔄 Tipo de entrega con switch */}
           <h2 className="font-semibold mb-2">Tipo de entrega</h2>
-          <div className="flex gap-2 mb-3">
-            <button
-              onClick={() => setTipoEntrega("delivery")}
-              className={`px-3 py-1 rounded-lg ${
-                tipoEntrega === "delivery"
-                  ? "bg-[#ec7c6a] text-white"
-                  : "bg-gray-200"
+          <div className="flex items-center justify-between bg-gray-100 rounded-xl px-4 py-3 mb-4">
+            <div className="flex items-center gap-3">
+              <img
+                src={
+                  tipoEntrega === "recojo"
+                    ? "/tienda.png"
+                    : "/delivery.png"
+                }
+                alt="icono entrega"
+                className="w-7 h-7 object-contain"
+              />
+              <span className="font-medium text-gray-800 text-sm">
+                {tipoEntrega === "recojo"
+                  ? "Recoger en tienda"
+                  : "Enviar a domicilio"}
+              </span>
+            </div>
+
+            {/* switch */}
+            <div
+              onClick={() =>
+                setTipoEntrega((prev) =>
+                  prev === "recojo" ? "delivery" : "recojo"
+                )
+              }
+              className={`relative w-12 h-6 flex items-center rounded-full cursor-pointer transition-all ${
+                tipoEntrega === "delivery" ? "bg-orange-500" : "bg-gray-400"
               }`}
             >
-              Delivery
-            </button>
-            <button
-              onClick={() => setTipoEntrega("recojo")}
-              className={`px-3 py-1 rounded-lg ${
-                tipoEntrega === "recojo"
-                  ? "bg-[#ec7c6a] text-white"
-                  : "bg-gray-200"
-              }`}
-            >
-              Recojo en tienda
-            </button>
+              <div
+                className={`absolute bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${
+                  tipoEntrega === "delivery" ? "translate-x-6" : "translate-x-1"
+                }`}
+              ></div>
+            </div>
           </div>
 
+          {/* Datos cliente */}
           <div className="flex flex-col gap-2">
             <input
               type="text"
@@ -343,7 +339,7 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
           </div>
           <button
             onClick={enviarPedido}
-            className="bg-[#ec7c6a] w-full py-2 px-4 rounded-lg font-semibold hover:scale-105 transition-transform"
+            className="bg-[#F0320C] w-full py-2 px-4 rounded-lg font-semibold text-white"
           >
             Enviar pedido
           </button>

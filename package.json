@@ -9,9 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "framer-motion": "^12.23.24",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
+    "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^4.4.0"
+    "react-icons": "^4.12.0",
+    "react-leaflet": "^4.2.1",
+    "react-quill": "^2.0.0",
+    "sweetalert": "^2.1.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.17",
