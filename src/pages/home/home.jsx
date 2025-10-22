@@ -277,7 +277,7 @@ const Home = ({ addToCart, cart, setCart }) => {
             </div>
           )}
 
-          <Card darkMode={darkMode} products={filteredProducts} addToCart={addToCart} />
+          <Card darkMode={darkMode} products={filteredProducts} addToCart={addToCart} selectedCategory={selectedCategory} />
         </div>
       </main>
     </div>
