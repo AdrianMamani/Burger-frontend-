@@ -15,7 +15,7 @@ const CategoryPage = () => {
         useEffect(() => {
           const fetchEmpresa = async () => {
             try {
-              const res = await fetch("http://127.0.0.1:8000/api/empresa");
+              const res = await fetch("https://apiricoton.cartavirtual.shop/api/empresa");
               const data = await res.json();
               if (data && data.nombre) setEmpresaNombre(data.nombre);
             } catch (error) {
