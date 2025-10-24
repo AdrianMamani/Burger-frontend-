@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaEye, FaShoppingCart } from "react-icons/fa";
+import { FaShoppingCart } from "react-icons/fa";
 import { RiCloseLine } from "react-icons/ri";
 
 const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
@@ -58,45 +58,88 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
   }, [selectedCategory]);
 
   return (
-    <div className="w-full">
+    <div className="w-full mt-6 md:mt-8">
       {error && (
         <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4 text-center font-semibold">
           {error}
         </div>
       )}
 
-      {/* Grid de tarjetas */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 justify-items-center px-3 sm:px-4 md:px-6">
-
-        {/* Primera tarjeta: categoría/banner */}
-        {categoryInfo && (
+      {/* Banner de categoría (solo móvil) */}
+      {categoryInfo && (
+        <div className="block md:hidden w-full mb-4 px-3">
           <div
-            className={`flex flex-col justify-between p-4 w-full rounded-2xl border transition-all duration-300
-              sm:max-w-[340px] sm:min-h-[360px] 
-              md:max-w-[400px] md:min-h-[420px] 
-              xl:max-w-[280px] xl:min-h-[320px]
+            className={`flex items-center p-4 w-full rounded-2xl transition-all duration-300
               text-white shadow-lg`}
             style={{
-              background: `linear-gradient(135deg, ${categoryInfo.dominantColor || "#F0320C"} 0%, ${
-                categoryInfo.dominantColor ? categoryInfo.dominantColor + "aa" : "#ff5a36"
+              background: `linear-gradient(135deg, ${
+                categoryInfo.dominantColor || "#F0320C"
+              } 0%, ${
+                categoryInfo.dominantColor
+                  ? categoryInfo.dominantColor + "aa"
+                  : "#ff5a36"
               } 100%)`,
             }}
           >
-            <div className="flex justify-center mb-4">
+            <div className="w-1/3 pr-3">
               <img
                 src={`https://apiricoton.cartavirtual.shop/${categoryInfo.imagen_url}`}
                 alt={categoryInfo.nombre}
-                className="w-36 h-36 md:w-44 md:h-44 object-contain rounded-xl"
+                className="w-full h-auto object-contain rounded-lg"
                 onError={(e) =>
-                  (e.target.src = "https://via.placeholder.com/150?text=Sin+Imagen")
+                  (e.target.src =
+                    "https://via.placeholder.com/150?text=Sin+Imagen")
                 }
               />
             </div>
-            <div className="flex flex-col text-center w-full mt-3 flex-grow">
-              <h4 className="font-extrabold text-xl md:text-2xl">{categoryInfo.nombre}</h4>
+            <div className="w-2/3 pl-2">
+              <h4 className="font-extrabold text-lg">{categoryInfo.nombre}</h4>
               {categoryInfo.descripcion && (
-                <p className="text-sm md:text-base mt-1">{categoryInfo.descripcion}</p>
+                <p className="text-xs mt-1">{categoryInfo.descripcion}</p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grid de tarjetas */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 justify-items-center px-2 sm:px-3">
+        {categoryInfo && (
+          <div className="hidden md:block w-full">
+            <div
+              className={`flex flex-col justify-between p-3 h-full rounded-xl border transition-all duration-300
+                min-h-[320px] text-white shadow-md`}
+              style={{
+                background: `linear-gradient(135deg, ${
+                  categoryInfo.dominantColor || "#F0320C"
+                } 0%, ${
+                  categoryInfo.dominantColor
+                    ? categoryInfo.dominantColor + "aa"
+                    : "#ff5a36"
+                } 100%)`,
+              }}
+            >
+              <div className="flex justify-center mb-4">
+                <img
+                  src={`https://apiricoton.cartavirtual.shop/${categoryInfo.imagen_url}`}
+                  alt={categoryInfo.nombre}
+                  className="w-36 h-36 md:w-44 md:h-44 object-contain rounded-xl"
+                  onError={(e) =>
+                    (e.target.src =
+                      "https://via.placeholder.com/150?text=Sin+Imagen")
+                  }
+                />
+              </div>
+              <div className="flex flex-col text-center w-full mt-3 flex-grow">
+                <h4 className="font-extrabold text-xl md:text-2xl">
+                  {categoryInfo.nombre}
+                </h4>
+                {categoryInfo.descripcion && (
+                  <p className="text-sm md:text-base mt-1">
+                    {categoryInfo.descripcion}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -105,50 +148,40 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
         {products.map((product) => (
           <div
             key={product.id_producto}
-            className={`flex flex-col justify-between p-4 w-full rounded-2xl border transition-all duration-300
+            className={`flex flex-col justify-between p-3 w-full rounded-xl border transition-all duration-300 cursor-pointer
               ${
                 darkMode
                   ? "bg-[#262837] border-gray-700 text-gray-300"
                   : "bg-gray-50 border-gray-200 text-gray-900"
-              } 
-              sm:max-w-[340px] sm:min-h-[360px] 
-              md:max-w-[400px] md:min-h-[420px] 
-              xl:max-w-[280px] xl:min-h-[320px]
-            `}
+              }`}
+            onClick={() => openModal(product)}
           >
             <img
               src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
               alt={product.nombre}
-              className="w-36 h-36 md:w-44 md:h-44 object-cover rounded-xl mx-auto"
+              className="w-28 h-28 md:w-32 md:h-32 object-cover rounded-lg mx-auto"
               onError={(e) =>
                 (e.target.src =
                   "https://via.placeholder.com/150?text=Sin+Imagen")
               }
             />
-
             <div className="flex flex-col text-left w-full mt-3 flex-grow">
-              <h4 className="font-semibold text-lg md:text-xl">{product.nombre}</h4>
-              <p className="text-sm md:text-base mt-1">Precio: S/ {product.precio}</p>
+              <h4 className="font-semibold text-base md:text-lg">
+                {product.nombre}
+              </h4>
+              <p className="text-sm mt-1">Precio: S/ {product.precio}</p>
             </div>
 
-            <div className="mt-4 flex gap-2">
-              <button
-                className={`w-1/2 py-2 rounded-lg font-medium flex items-center justify-center ${
-                  darkMode
-                    ? "bg-gray-700 hover:bg-gray-600 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-black"
-                }`}
-                onClick={() => openModal(product)}
-              >
-                <FaEye size={18} />
-              </button>
-              <button
-                className="w-1/2 py-2 rounded-lg font-medium flex items-center justify-center bg-[#F0320C] hover:bg-[#d42c0b] text-white"
-                onClick={() => addToCart(product)}
-              >
-                <FaShoppingCart size={18} />
-              </button>
-            </div>
+            <button
+              className="mt-3 w-full py-2 rounded-lg font-medium flex items-center justify-center bg-[#F0320C] hover:bg-[#d42c0b] text-white"
+              onClick={(e) => {
+                e.stopPropagation(); // evita abrir modal al hacer click en añadir
+                addToCart(product);
+              }}
+            >
+              <FaShoppingCart size={18} className="mr-2" />
+              Añadir
+            </button>
           </div>
         ))}
       </div>

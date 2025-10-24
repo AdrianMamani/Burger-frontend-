@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { RiCloseLine } from "react-icons/ri";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
   const bgCard = darkMode ? "bg-[#1F1D2B]" : "bg-white";
@@ -11,10 +13,7 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
   const [cupones, setCupones] = useState([]);
   const [couponCodes, setCouponCodes] = useState({});
   const [metodoPago, setMetodoPago] = useState("efectivo");
-
-  // 🔸 Por defecto: Recojo en tienda
   const [tipoEntrega, setTipoEntrega] = useState("recojo");
-
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [direccion, setDireccion] = useState("");
@@ -50,28 +49,43 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
     setCart((prev) => prev.filter((p) => p.id_producto !== id));
   };
 
+  // 🔹 Función auxiliar para mostrar toast
+  const showToast = (icon, message) => {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: icon,
+      title: message,
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+    });
+  };
+
   const applyCoupon = (codigo, product) => {
     const cupon = cupones.find((c) => c.codigo === codigo && c.estado);
 
     if (!cupon) {
-      alert("Cupón inválido o inactivo");
+      showToast("error", "Cupón inválido o inactivo");
       return;
     }
 
     const hoy = new Date();
     const inicio = new Date(cupon.fecha_inicio);
     const fin = new Date(cupon.fecha_fin);
+
     if (hoy < inicio || hoy > fin) {
-      alert("Cupón expirado o aún no disponible");
+      showToast("error", "Cupón expirado o aún no disponible");
       return;
     }
 
     if (cupon.id_producto && cupon.id_producto !== product.id_producto) {
-      alert("Cupón no aplica a este producto");
+      showToast("error", "Cupón no aplica a este producto");
       return;
     }
+
     if (cupon.id_categoria && cupon.id_categoria !== product.id_categoria) {
-      alert("Cupón no aplica a esta categoría");
+      showToast("error", "Cupón no aplica a esta categoría");
       return;
     }
 
@@ -90,7 +104,7 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
       )
     );
 
-    alert(`Cupón aplicado: ${codigo}`);
+    showToast("success", `Cupón aplicado: ${codigo}`);
   };
 
   const subtotal = cart
@@ -99,7 +113,7 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
 
   const enviarPedido = () => {
     if (!nombre || !telefono) {
-      alert("Por favor complete nombre y teléfono.");
+      showToast("error", "Por favor complete nombre y teléfono.");
       return;
     }
 
@@ -230,25 +244,16 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
                   metodoPago === m.id ? "bg-white" : "bg-gray-100"
                 }`}
               >
-                <img
-                  src={m.img}
-                  alt={m.id}
-                  className="w-10 h-10 object-contain"
-                />
+                <img src={m.img} alt={m.id} className="w-10 h-10 object-contain" />
               </button>
             ))}
           </div>
 
-          {/* 🔄 Tipo de entrega con switch */}
           <h2 className="font-semibold mb-2">Tipo de entrega</h2>
           <div className="flex items-center justify-between bg-gray-100 rounded-xl px-4 py-3 mb-4">
             <div className="flex items-center gap-3">
               <img
-                src={
-                  tipoEntrega === "recojo"
-                    ? "/tienda.png"
-                    : "/delivery.png"
-                }
+                src={tipoEntrega === "recojo" ? "/tienda.png" : "/delivery.png"}
                 alt="icono entrega"
                 className="w-7 h-7 object-contain"
               />
@@ -259,7 +264,6 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
               </span>
             </div>
 
-            {/* switch */}
             <div
               onClick={() =>
                 setTipoEntrega((prev) =>
@@ -278,7 +282,6 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
             </div>
           </div>
 
-          {/* Datos cliente */}
           <div className="flex flex-col gap-2">
             <input
               type="text"
@@ -327,10 +330,7 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
           <div className="flex items-center justify-between mb-2">
             <span className={`${textGray}`}>Descuento total</span>
             <span>
-              -S/.{" "}
-              {cart
-                .reduce((acc, p) => acc + (p.descuento || 0), 0)
-                .toFixed(2)}
+              -S/. {cart.reduce((acc, p) => acc + (p.descuento || 0), 0).toFixed(2)}
             </span>
           </div>
           <div className="flex items-center justify-between mb-4">
