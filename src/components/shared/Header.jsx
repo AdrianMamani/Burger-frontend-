@@ -12,6 +12,7 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
   const [categories, setCategories] = useState([]);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [empresa, setEmpresa] = useState({
+    nombre: "",
     telefono: "",
     ubicacion: "",
     facebook_url: "",
@@ -36,6 +37,7 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
       .then((data) => {
         if (data) {
           setEmpresa({
+            nombre: data.nombre || "",
             telefono: data.telefono || "",
             ubicacion: data.ubicacion || "",
             facebook_url: data.facebook_url || "",
@@ -72,7 +74,7 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
               darkMode ? "text-gray-300" : "text-black"
             } text-2xl font-semibold`}
           >
-            Nuestro Menú
+            Bienvenidos a {empresa.nombre || ""}
           </h1>
           <p className={`${darkMode ? "text-gray-400" : "text-gray-500"}`}>
             {formattedDate} - {formattedTime}
@@ -190,7 +192,7 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
           onClick={() => onSelectCategory("Todos")}
           className={`relative py-2 px-4 flex-shrink-0 ${
             selectedCategory === "Todos"
-              ? "text-[#ec7c6a] before:w-1/2 before:h-[2px] before:absolute before:bg-[#ec7c6a] before:left-0 before:rounded-full before:-bottom-[1px]"
+              ? "text-[#F0320C] before:w-1/2 before:h-[2px] before:absolute before:bg-[#F0320C] before:left-0 before:rounded-full before:-bottom-[1px]"
               : ""
           }`}
         >
@@ -203,7 +205,7 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
             onClick={() => onSelectCategory(cat.id_categoria)}
             className={`relative py-2 px-4 flex-shrink-0 ${
               selectedCategory === cat.id_categoria
-                ? "text-[#ec7c6a] before:w-1/2 before:h-[2px] before:absolute before:bg-[#ec7c6a] before:left-0 before:rounded-full before:-bottom-[1px]"
+                ? "text-[#F0320C] before:w-1/2 before:h-[2px] before:absolute before:bg-[#F0320C] before:left-0 before:rounded-full before:-bottom-[1px]"
                 : ""
             }`}
           >
