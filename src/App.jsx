@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Home from "./pages/home/home";
 import Terminos from "./pages/home/terminos";
@@ -19,6 +19,13 @@ import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   const [cart, setCart] = useState([]); // carrito global
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const addToCart = (product) => {
     setCart((prev) => {
@@ -34,6 +41,31 @@ function App() {
     });
   };
 
+  // Componente para bloquear acceso desde móviles
+  const OnlyDesktop = ({ children }) => {
+    if (!isDesktop) {
+      return (
+        <div
+          style={{
+            height: "100vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            background: "#000",
+            color: "#fff",
+            flexDirection: "column",
+            padding: "1rem",
+          }}
+        >
+          <h2>Acceso no disponible</h2>
+          <p>Este módulo no esta disponible para celulares.</p>
+        </div>
+      );
+    }
+    return children;
+  };
+
   return (
     <Router>
       <Routes>
@@ -41,66 +73,92 @@ function App() {
         <Route path="/" element={<Navigate to="/home" />} />
 
         {/* Sitio público */}
-        <Route path="/home" element={<Home addToCart={addToCart} cart={cart} setCart={setCart} />} />
+        <Route
+          path="/home"
+          element={<Home addToCart={addToCart} cart={cart} setCart={setCart} />}
+        />
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/politicas" element={<Politica />} />
-        <Route path="/login" element={<Login />} />
 
-        {/* Panel administrador protegido */}
+        {/* Login restringido solo a PC/Laptop */}
+        <Route
+          path="/login"
+          element={
+            <OnlyDesktop>
+              <Login />
+            </OnlyDesktop>
+          }
+        />
+
+        {/* Panel administrador protegido y solo accesible desde PC/Laptop */}
         <Route
           path="/admin/dashboard"
           element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
+            <OnlyDesktop>
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            </OnlyDesktop>
           }
         />
         <Route
           path="/admin/categorias"
           element={
-            <PrivateRoute>
-              <CategoriaAdmin />
-            </PrivateRoute>
+            <OnlyDesktop>
+              <PrivateRoute>
+                <CategoriaAdmin />
+              </PrivateRoute>
+            </OnlyDesktop>
           }
         />
         <Route
           path="/admin/categorias/:id_categoria"
           element={
-            <PrivateRoute>
-              <ProductoAdmin />
-            </PrivateRoute>
+            <OnlyDesktop>
+              <PrivateRoute>
+                <ProductoAdmin />
+              </PrivateRoute>
+            </OnlyDesktop>
           }
         />
         <Route
           path="/admin/profile"
           element={
-            <PrivateRoute>
-              <Profile />
-            </PrivateRoute>
+            <OnlyDesktop>
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            </OnlyDesktop>
           }
         />
         <Route
           path="/admin/cupon"
           element={
-            <PrivateRoute>
-              <Cupon />
-            </PrivateRoute>
+            <OnlyDesktop>
+              <PrivateRoute>
+                <Cupon />
+              </PrivateRoute>
+            </OnlyDesktop>
           }
         />
         <Route
           path="/admin/politicas"
           element={
-            <PrivateRoute>
-              <PoliticaAdmin />
-            </PrivateRoute>
+            <OnlyDesktop>
+              <PrivateRoute>
+                <PoliticaAdmin />
+              </PrivateRoute>
+            </OnlyDesktop>
           }
         />
         <Route
           path="/admin/terminos"
           element={
-            <PrivateRoute>
-              <TerminosAdmin />
-            </PrivateRoute>
+            <OnlyDesktop>
+              <PrivateRoute>
+                <TerminosAdmin />
+              </PrivateRoute>
+            </OnlyDesktop>
           }
         />
       </Routes>

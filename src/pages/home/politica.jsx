@@ -19,7 +19,6 @@ const Politica = () => {
   const toggleMenu = () => setShowMenu(!showMenu);
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
-  // 🔹 Cargar logo desde API real
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/recursos-empresa")
       .then((res) => res.json())
@@ -28,7 +27,6 @@ const Politica = () => {
           const url = `https://apiricoton.cartavirtual.shop/${data.logo_url}`;
           setLogoUrl(url);
 
-          // Favicon dinámico
           const favicon =
             document.querySelector("link[rel='icon']") ||
             document.createElement("link");
@@ -40,7 +38,6 @@ const Politica = () => {
       .catch((err) => console.error("Error obteniendo logo:", err));
   }, []);
 
-  // 🔹 Cargar políticas
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/politicas")
       .then((res) => {
@@ -58,7 +55,6 @@ const Politica = () => {
       });
   }, []);
 
-  // 🔹 Cargar datos de la empresa
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/empresa")
       .then((res) => {
@@ -72,22 +68,19 @@ const Politica = () => {
       .catch((err) => console.error("Error cargando empresa:", err));
   }, []);
 
-  // 🔹 Modo oscuro
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  // 🔹 Mostrar splash hasta que se cargue el logo y la empresa
   useEffect(() => {
     if (logoUrl && empresa) {
       const timer = setTimeout(() => {
         setShowSplash(false);
-      }, 1500); // leve delay para el efecto
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [logoUrl, empresa]);
 
-  // 🔹 Pantalla splash con animación elegante
   if (showSplash) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-white">
@@ -113,7 +106,6 @@ const Politica = () => {
     );
   }
 
-  // 🔹 Contenido principal
   return (
     <div
       className={`w-full min-h-screen transition-colors duration-300 ${
@@ -128,52 +120,65 @@ const Politica = () => {
         }`}
       >
         <div className="p-4 md:p-8">
-          {/* NAV MÓVIL */}
           <nav
-            className={`lg:hidden fixed w-full bottom-0 left-0 text-2xl py-3 px-6 flex items-center justify-around ${
-              darkMode
-                ? "bg-[#1F1D2B] border-t border-gray-700"
-                : "bg-white shadow-lg border-t border-gray-200"
-            } z-10`}
+            className={`lg:hidden fixed bottom-4 left-1/2 transform -translate-x-1/2
+    flex items-center justify-between w-[88%] h-16 z-30
+    rounded-3xl shadow-xl backdrop-blur-md border
+    ${darkMode ? "bg-[#1F1D2B]/90 border-gray-700" : "bg-white/90 border-gray-300"}
+  `}
           >
             <button
               onClick={() => navigate("/home")}
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-                darkMode
-                  ? "text-gray-400 hover:text-white"
-                  : "text-black hover:text-gray-800"
-              }`}
+              aria-label="Inicio"
+              className={`flex items-center justify-center flex-1 h-full transition-all group rounded-none
+    ${location.pathname === "/home"
+                  ? "bg-[#F0320C] text-white rounded-l-3xl"
+                  : "hover:bg-[#F0320C] hover:text-white hover:rounded-l-3xl active:bg-[#F0320C] active:rounded-l-3xl focus:bg-[#F0320C] focus:rounded-l-3xl"
+                }
+  `}
             >
-              <RiHome6Line className="text-2xl" />
-              <span className="text-xs mt-1">Inicio</span>
+              <RiHome6Line
+                className={`text-2xl transition-colors ${
+                  location.pathname === "/home" ? "text-white" : (darkMode ? "text-gray-300" : "text-gray-700")
+                } group-hover:text-white`}
+              />
             </button>
 
             <button
               onClick={() => navigate("/terminos")}
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-                darkMode
-                  ? "text-gray-400 hover:text-white"
-                  : "text-black hover:text-gray-800"
-              }`}
+              aria-label="Términos"
+              className={`flex items-center justify-center flex-1 h-full transition-all group rounded-none
+    ${location.pathname === "/terminos"
+                  ? "bg-[#F0320C] text-white"
+                  : "hover:bg-[#F0320C] hover:text-white active:bg-[#F0320C] focus:bg-[#F0320C]"
+                }
+  `}
             >
-              <FaBook className="text-xl" />
-              <span className="text-xs mt-1">Términos</span>
+              <FaBook
+                className={`text-2xl transition-colors ${
+                  location.pathname === "/terminos" ? "text-white" : (darkMode ? "text-gray-300" : "text-gray-700")
+                } group-hover:text-white`}
+              />
             </button>
 
             <button
               onClick={() => navigate("/politicas")}
-              className={`flex flex-col items-center p-2 rounded-lg ${
-                darkMode
-                  ? "text-amber-400 bg-amber-900/30"
-                  : "text-amber-600 bg-amber-100"
-              }`}
+              aria-label="Privacidad"
+              className={`flex items-center justify-center flex-1 h-full transition-all group rounded-none
+    ${location.pathname === "/politicas"
+                  ? "bg-[#F0320C] text-white rounded-r-3xl"
+                  : "hover:bg-[#F0320C] hover:text-white hover:rounded-r-3xl active:bg-[#F0320C] active:rounded-r-3xl focus:bg-[#F0320C] focus:rounded-r-3xl"
+                }
+  `}
             >
-              <BsShieldCheck className="text-2xl" />
-              <span className="text-xs mt-1">Privacidad</span>
+              <BsShieldCheck
+                className={`text-2xl transition-colors ${
+                  location.pathname === "/politicas" ? "text-white" : (darkMode ? "text-gray-300" : "text-gray-700")
+                } group-hover:text-white`}
+              />
             </button>
           </nav>
 
-          {/* CONTENIDO */}
           <div className="mt-4 md:mt-2">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
               <div className="mb-6 md:mb-0">
@@ -209,7 +214,6 @@ const Politica = () => {
             </div>
           </div>
 
-          {/* FOOTER */}
           <footer className="py-6 text-center text-sm mt-10">
             <p>
               © {new Date().getFullYear()}{" "}

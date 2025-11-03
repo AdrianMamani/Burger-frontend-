@@ -19,12 +19,28 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
   const [direccion, setDireccion] = useState("");
   const [mesa, setMesa] = useState("");
   const [observacion, setObservacion] = useState("");
+  const [telefonoEmpresa, setTelefonoEmpresa] = useState(""); // guardamos aquí el número de la API
 
+  // Obtener cupones
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/cupon")
       .then((res) => res.json())
       .then((data) => setCupones(data))
       .catch((err) => console.error("Error al obtener cupones:", err));
+  }, []);
+
+  // Obtener teléfono de la empresa al montar (cache)
+  useEffect(() => {
+    const fetchTelefono = async () => {
+      try {
+        const res = await fetch("https://apiricoton.cartavirtual.shop/api/empresa");
+        const data = await res.json();
+        if (data && data.telefono) setTelefonoEmpresa(String(data.telefono));
+      } catch (err) {
+        console.error("Error al obtener teléfono de empresa:", err);
+      }
+    };
+    fetchTelefono();
   }, []);
 
   const increaseQty = (id) => {
@@ -49,12 +65,11 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
     setCart((prev) => prev.filter((p) => p.id_producto !== id));
   };
 
-  // 🔹 Función auxiliar para mostrar toast
   const showToast = (icon, message) => {
     Swal.fire({
       toast: true,
       position: "top-end",
-      icon: icon,
+      icon,
       title: message,
       showConfirmButton: false,
       timer: 3000,
@@ -111,38 +126,71 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
     .reduce((acc, p) => acc + (p.precio * p.cantidad - (p.descuento || 0)), 0)
     .toFixed(2);
 
-  const enviarPedido = () => {
-    if (!nombre || !telefono) {
-      showToast("error", "Por favor complete nombre y teléfono.");
+  // Normaliza el número: deja solo dígitos y agrega prefijo 51 si falta
+  const normalizePhone = (raw) => {
+    if (!raw) return "";
+    const digits = String(raw).replace(/\D/g, ""); // quitar todo lo no numérico
+    if (!digits) return "";
+    return digits.startsWith("51") ? digits : `51${digits}`;
+  };
+
+  // enviarPedido ahora usa telefonoEmpresa (cached). Si no existe, intenta pedirlo en ese momento.
+  const enviarPedido = async () => {
+  if (!nombre || !telefono) {
+    showToast("error", "Por favor complete nombre y teléfono.");
+    return;
+  }
+
+  // tu mensaje original (sin cambios)
+  let mensaje = `*Nuevo Pedido*%0A%0A`;
+  mensaje += `Nombre: ${nombre}%0A Teléfono: ${telefono}%0A`;
+  mensaje += `Método de pago: ${metodoPago}%0A`;
+  mensaje += `Entrega: ${tipoEntrega}%0A`;
+
+  if (tipoEntrega === "delivery") {
+    mensaje += `Dirección: ${direccion}%0A`;
+  } else {
+    mensaje += `Mesa: ${mesa}%0A`;
+  }
+
+  if (observacion) mensaje += `Observación: ${observacion}%0A`;
+
+  mensaje += `%0A--- Productos --- %0A`;
+  cart.forEach((p) => {
+    mensaje += `• ${p.nombre} x${p.cantidad} - S/.${(
+      p.precio * p.cantidad - (p.descuento || 0)
+    ).toFixed(2)}%0A`;
+    if (p.cupon) mensaje += `   Cupón: ${p.cupon.codigo}%0A`;
+  });
+
+  mensaje += `%0ATotal: S/. ${subtotal}`;
+
+  try {
+    // obtener número desde tu API
+    const res = await fetch("https://apiricoton.cartavirtual.shop/api/empresa");
+    const data = await res.json();
+
+    let telefonoEmpresa = data?.telefono ? String(data.telefono) : "";
+
+    // limpiar y normalizar
+    telefonoEmpresa = telefonoEmpresa.replace(/\D/g, ""); // deja solo dígitos
+    if (!telefonoEmpresa.startsWith("51")) {
+      telefonoEmpresa = `51${telefonoEmpresa}`;
+    }
+
+    if (!telefonoEmpresa) {
+      showToast("error", "No se encontró el número de contacto de la empresa.");
       return;
     }
 
-    let mensaje = `*Nuevo Pedido*%0A%0A`;
-    mensaje += `Nombre: ${nombre}%0A Teléfono: ${telefono}%0A`;
-    mensaje += `Método de pago: ${metodoPago}%0A`;
-    mensaje += `Entrega: ${tipoEntrega}%0A`;
-
-    if (tipoEntrega === "delivery") {
-      mensaje += `Dirección: ${direccion}%0A`;
-    } else {
-      mensaje += `Mesa: ${mesa}%0A`;
-    }
-
-    if (observacion) mensaje += `Observación: ${observacion}%0A`;
-
-    mensaje += `%0A--- Productos --- %0A`;
-    cart.forEach((p) => {
-      mensaje += `• ${p.nombre} x${p.cantidad} - S/.${(
-        p.precio * p.cantidad - (p.descuento || 0)
-      ).toFixed(2)}%0A`;
-      if (p.cupon) mensaje += `   Cupón: ${p.cupon.codigo}%0A`;
-    });
-
-    mensaje += `%0ATotal: S/. ${subtotal}`;
-
-    const url = `https://wa.me/51934629203?text=${mensaje}`;
+    // usar el número dinámico en la URL de WhatsApp
+    const url = `https://wa.me/${telefonoEmpresa}?text=${mensaje}`;
     window.open(url, "_blank");
-  };
+  } catch (error) {
+    console.error("Error al obtener teléfono de empresa:", error);
+    showToast("error", "Error al contactar con la empresa.");
+  }
+};
 
   return (
     <div

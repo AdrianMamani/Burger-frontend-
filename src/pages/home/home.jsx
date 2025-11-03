@@ -39,7 +39,6 @@ const Home = ({ addToCart, cart, setCart }) => {
   if (videoUrl && videoUrl.includes("youtube"))
     slides.push({ type: "video", src: videoUrl });
 
-  // 🔹 Cargar productos
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/producto")
       .then((res) => res.json())
@@ -47,7 +46,6 @@ const Home = ({ addToCart, cart, setCart }) => {
       .catch(() => {});
   }, []);
 
-  // 🔹 Recursos empresa (logo, portada)
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/recursos-empresa")
       .then((res) => res.json())
@@ -62,7 +60,6 @@ const Home = ({ addToCart, cart, setCart }) => {
       .catch(() => {});
   }, []);
 
-  // 🔹 Datos empresa (nombre, horario, video, redes sociales)
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/empresa")
       .then((res) => res.json())
@@ -77,7 +74,6 @@ const Home = ({ addToCart, cart, setCart }) => {
       .catch(() => {});
   }, []);
 
-  // 🔹 Título dinámico + favicon
   useEffect(() => {
     if (empresaNombre) document.title = `${empresaNombre} / Home`;
     if (logoUrl) {
@@ -90,13 +86,11 @@ const Home = ({ addToCart, cart, setCart }) => {
     }
   }, [empresaNombre, logoUrl]);
 
-  // 🔹 Splash
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // 🔹 Filtro productos
   const filteredProducts = products.filter((p) =>
     searchTerm.trim() !== ""
       ? p.nombre.toLowerCase().includes(searchTerm.toLowerCase())
@@ -105,24 +99,13 @@ const Home = ({ addToCart, cart, setCart }) => {
       : p.id_categoria === selectedCategory
   );
 
-  // 🔹 Flechas del carrusel
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
-  };
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
-  };
+  const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
 
   if (showSplash) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
-        {logoUrl && (
-          <img
-            src={logoUrl}
-            alt="Logo"
-            className="w-48 h-auto object-contain"
-          />
-        )}
+        {logoUrl && <img src={logoUrl} alt="Logo" className="w-48 h-auto object-contain" />}
       </div>
     );
   }
@@ -142,70 +125,89 @@ const Home = ({ addToCart, cart, setCart }) => {
         setCart={setCart}
       />
 
-      {/* 🔹 NAV MÓVIL */}
       <nav
-  className={`lg:hidden fixed w-full bottom-0 left-0 text-2xl py-3 px-6 flex items-center justify-around z-20 border-t ${
-    darkMode
-      ? "bg-[#1F1D2B] border-gray-700 text-gray-400"
-      : "bg-white shadow-lg border-gray-200 text-gray-700"
-  }`}
->
-  <button
-    onClick={() => navigate("/home")}
-    className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-      darkMode
-        ? "text-amber-400 bg-amber-900/30"
-        : "text-amber-600 bg-amber-100"
-    }`}
-  >
-    <RiHome6Line className="text-2xl" />
-    <span className="text-xs mt-1">Inicio</span>
-  </button>
+        className={`lg:hidden fixed bottom-4 left-1/2 transform -translate-x-1/2 
+    flex items-center justify-between w-[88%] h-16 z-30 
+    rounded-3xl shadow-xl backdrop-blur-md border
+    ${darkMode ? "bg-[#1F1D2B]/90 border-gray-700" : "bg-white/90 border-gray-300"}
+  `}
+      >
+        <button
+          onClick={() => navigate("/home")}
+          aria-label="Inicio"
+          className={`flex items-center justify-center flex-1 h-full transition-all group
+    rounded-none
+    ${location.pathname === "/home"
+              ? "bg-[#F0320C] text-white rounded-l-3xl"
+              : "hover:bg-[#F0320C] hover:text-white hover:rounded-l-3xl active:bg-[#F0320C] active:rounded-l-3xl focus:bg-[#F0320C] focus:rounded-l-3xl"
+            }
+    `}
+        >
+          <RiHome6Line className="text-2xl" />
+        </button>
 
-  <button
-    onClick={() => navigate("/terminos")}
-    className="flex flex-col items-center p-2 rounded-lg transition-colors text-black hover:text-gray-800"
-  >
-    <FaBook className="text-xl" />
-    <span className="text-xs mt-1">Términos</span>
-  </button>
+        <button
+          onClick={() => navigate("/terminos")}
+          aria-label="Términos"
+          className={`flex items-center justify-center flex-1 h-full transition-all group
+    rounded-none
+    ${location.pathname === "/terminos"
+              ? "bg-[#F0320C] text-white"
+              : "hover:bg-[#F0320C] hover:text-white active:bg-[#F0320C] focus:bg-[#F0320C]"
+            }
+    `}
+        >
+          <FaBook className="text-2xl" />
+        </button>
 
-  <button
-    onClick={() => navigate("/politicas")}
-    className="flex flex-col items-center p-2 rounded-lg transition-colors text-black hover:text-gray-800"
-  >
-    <BsShieldCheck className="text-2xl" />
-    <span className="text-xs mt-1">Privacidad</span>
-  </button>
+        <button
+          onClick={() => navigate("/politicas")}
+          aria-label="Privacidad"
+          className={`flex items-center justify-center flex-1 h-full transition-all group
+    rounded-none
+    ${location.pathname === "/politicas"
+              ? "bg-[#F0320C] text-white"
+              : "hover:bg-[#F0320C] hover:text-white active:bg-[#F0320C] focus:bg-[#F0320C]"
+            }
+    `}
+        >
+          <BsShieldCheck className="text-2xl" />
+        </button>
 
-  {/* 🔹 Carrito con contador */}
-  <button
-    onClick={() => setShowOrder(true)}
-    className="relative flex flex-col items-center p-2 rounded-lg transition-colors text-black hover:text-gray-800"
-  >
-    <RiShoppingCart2Line className="text-2xl" />
-    {cart.length > 0 && (
-      <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
-        {cart.length}
-      </span>
-    )}
-    <span className="text-xs mt-1">Carrito</span>
-  </button>
-</nav>
+        <button
+          onClick={() => setShowOrder(true)}
+          aria-label="Carrito"
+          className={`relative flex items-center justify-center flex-1 h-full transition-all group
+    rounded-none
+    ${showOrder
+              ? "bg-[#F0320C] text-white rounded-r-3xl"
+              : "hover:bg-[#F0320C] hover:text-white hover:rounded-r-3xl active:bg-[#F0320C] active:rounded-r-3xl focus:bg-[#F0320C] focus:rounded-r-3xl"
+            }
+    `}
+        >
+          <RiShoppingCart2Line className="text-2xl" />
+          {cart.length > 0 && (
+            <span className="absolute top-1 right-5 bg-[#2E2E2E] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
+              {cart.length}
+            </span>
+          )}
+        </button>
+      </nav>
 
-      {/* 🔹 CONTENIDO PRINCIPAL */}
+
       <main className="lg:pl-32 lg:pr-96 pb-20">
         <div className="md:p-8 p-4">
-          <Header
-            darkMode={darkMode}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-            onSearch={setSearchTerm}
-          />
+          {!showOrder && (
+            <Header
+              darkMode={darkMode}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              onSearch={setSearchTerm}
+            />
+          )}
 
-          {/* 🔹 Banner con flechas manuales */}
           {selectedCategory === "Todos" && searchTerm.trim() === "" && slides.length > 0 && (
-            <div className="relative w-full mb-24">
+            <div className="relative w-full mb-24 mt-4">
               <AnimatePresence mode="wait">
                 {slides[currentIndex].type === "image" ? (
                   <motion.img
@@ -236,25 +238,23 @@ const Home = ({ addToCart, cart, setCart }) => {
                 )}
               </AnimatePresence>
 
-              {/* 🔹 Flechas de control */}
               {slides.length > 1 && (
                 <>
                   <button
                     onClick={prevSlide}
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-2.5 md:p-3 rounded-full transition"
                   >
-                    <MdKeyboardArrowLeft size={28} />
+                    <MdKeyboardArrowLeft className="text-[20px] sm:text-[24px] md:text-[28px]" />
                   </button>
                   <button
                     onClick={nextSlide}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-2.5 md:p-3 rounded-full transition"
                   >
-                    <MdKeyboardArrowRight size={28} />
+                    <MdKeyboardArrowRight className="text-[20px] sm:text-[24px] md:text-[28px]" />
                   </button>
                 </>
               )}
 
-              {/* 🔹 Contenedor inferior (redes + horario) */}
               <div
                 className="absolute left-0 right-0 mx-auto rounded-2xl shadow-lg flex flex-col items-center justify-center md:flex-col lg:flex-row px-6 md:px-10 gap-3 md:gap-0"
                 style={{
@@ -264,26 +264,39 @@ const Home = ({ addToCart, cart, setCart }) => {
                   width: "95%",
                 }}
               >
-                {/* Redes sociales (solo PC/laptop) */}
                 <div className="hidden lg:flex items-center justify-center gap-10 w-full lg:w-1/2">
                   {facebookUrl && (
-                    <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="bg-white text-[#1877F2] p-4 rounded-full text-2xl hover:scale-110 transition-transform">
+                    <a
+                      href={facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white text-[#1877F2] p-4 rounded-full text-2xl hover:scale-110 transition-transform"
+                    >
                       <FaFacebookF />
                     </a>
                   )}
                   {tiktokUrl && (
-                    <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className="bg-white text-black p-4 rounded-full text-2xl hover:scale-110 transition-transform">
+                    <a
+                      href={tiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white text-black p-4 rounded-full text-2xl hover:scale-110 transition-transform"
+                    >
                       <FaTiktok />
                     </a>
                   )}
                   {instagramUrl && (
-                    <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="bg-white text-[#E1306C] p-4 rounded-full text-2xl hover:scale-110 transition-transform">
+                    <a
+                      href={instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white text-[#E1306C] p-4 rounded-full text-2xl hover:scale-110 transition-transform"
+                    >
                       <FaInstagram />
                     </a>
                   )}
                 </div>
 
-                {/* Horario */}
                 <div className="flex flex-col text-white w-full justify-center items-center lg:items-end">
                   <div className="flex items-center gap-2 text-base md:text-lg font-semibold justify-center">
                     <RiTimeLine className="text-xl md:text-2xl" />
@@ -297,7 +310,6 @@ const Home = ({ addToCart, cart, setCart }) => {
             </div>
           )}
 
-          {/* 🔹 Productos */}
           <Card
             darkMode={darkMode}
             products={filteredProducts}

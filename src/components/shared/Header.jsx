@@ -8,9 +8,14 @@ import {
 } from "react-icons/ri";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 
-const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
+const Header = ({
+  darkMode,
+  selectedCategory,
+  onSelectCategory,
+  onSearch,
+  showOrder,
+}) => {
   const [categories, setCategories] = useState([]);
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [empresa, setEmpresa] = useState({
     nombre: "",
     telefono: "",
@@ -21,8 +26,23 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
   });
   const [showInfo, setShowInfo] = useState(false);
   const categoryRef = useRef(null);
+  const [showDots, setShowDots] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
 
-  // 🔹 Traer categorías
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/categorias")
       .then((res) => res.json())
@@ -30,7 +50,6 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
       .catch((err) => console.error("Error fetching categories:", err));
   }, []);
 
-  // 🔹 Traer datos de empresa
   useEffect(() => {
     fetch("https://apiricoton.cartavirtual.shop/api/empresa")
       .then((res) => res.json())
@@ -49,39 +68,75 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
       .catch((err) => console.error("Error fetching empresa:", err));
   }, []);
 
-  // 🔹 Actualizar hora cada segundo
   useEffect(() => {
-    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const container = categoryRef.current;
+    if (!container) return;
 
-  const options = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  const formattedDate = currentDateTime.toLocaleDateString("es-ES", options);
-  const formattedTime = currentDateTime.toLocaleTimeString("es-ES");
+    const handleScroll = () => {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      setScrollPosition(maxScroll > 0 ? container.scrollLeft / maxScroll : 0);
+    };
+
+    const checkScroll = () => {
+      setShowDots(container.scrollWidth > container.clientWidth);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", checkScroll);
+    checkScroll();
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [categories]);
 
   return (
     <header>
-      {/* 🔸 Encabezado superior */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
-        <div>
+      {!showOrder && (
+        <div
+          className={`md:hidden fixed top-0 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center
+  ${darkMode ? "text-gray-300" : "text-white"}
+  rounded-b-full py-3 w-[95%] transition-colors duration-300 ease-in-out`}
+          style={{
+            background: scrolled
+              ? "linear-gradient(90deg, #fd5d00ff, #e90404ff)"
+              : darkMode
+              ? "#1F1D2B"
+              : "linear-gradient(90deg, #fd5d00ff, #e90404ff)",
+          }}
+        >
           <h1
-            className={`${
+            className=" text-center uppercase special-gothic-expanded-one-regular"
+            style={{ fontSize: "28px" }}
+          >
+            {empresa.nombre || ""}
+          </h1>
+        </div>
+      )}
+
+      <div className="md:hidden h-16" />
+
+      <div
+        className={`flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4 
+        md:bg-transparent md:rounded-none 
+        ${darkMode ? "text-gray-300" : "text-black"}`}
+      >
+        <div className="pt-2 hidden md:block">
+          <h1
+            className={`uppercase martian-mono ${
               darkMode ? "text-gray-300" : "text-black"
-            } text-2xl font-semibold`}
+            }`}
+            style={{
+              fontSize: "32px",
+              lineHeight: "32px",
+            }}
           >
             Bienvenidos a {empresa.nombre || ""}
           </h1>
-          <p className={`${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-            {formattedDate} - {formattedTime}
-          </p>
         </div>
 
-        <form>
+        <form className="px-2 md:px-0">
           <div className="w-full md:w-96 lg:w-[400px] relative">
             <RiSearch2Line
               className={`absolute left-3 top-1/2 -translate-y-1/2 ${
@@ -93,7 +148,7 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
               onChange={(e) => onSearch(e.target.value)}
               className={`w-full py-2 pl-10 pr-4 rounded-lg outline-none ${
                 darkMode
-                  ? "bg-[#1F1D2B] text-gray-300"
+                  ? "bg-[#2B2A3A] text-gray-300"
                   : "bg-white text-black border border-gray-200"
               }`}
               placeholder="Buscar producto..."
@@ -102,7 +157,6 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
         </form>
       </div>
 
-      {/* 🔹 Botón para ver info */}
       <div className="mb-4 flex justify-start">
         <button
           onClick={() => setShowInfo(!showInfo)}
@@ -121,7 +175,6 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
         </button>
       </div>
 
-      {/* 🔹 Información desplegable */}
       {showInfo && (
         <div
           className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 transition-all duration-300 ease-in-out ${
@@ -139,12 +192,12 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
             <div className="flex items-center gap-2">
               <RiMapPin2Line className="text-lg text-red-600 flex-shrink-0" />
               <span>
-                <strong>Ubicación:</strong> {empresa.ubicacion || "No registrada"}
+                <strong>Ubicación:</strong>{" "}
+                {empresa.ubicacion || "No registrada"}
               </span>
             </div>
           </div>
 
-          {/* 🔹 Redes sociales centradas en pantallas pequeñas */}
           <div className="flex justify-center gap-6 mt-3 sm:hidden w-full">
             {empresa.facebook_url && (
               <a
@@ -152,7 +205,6 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-red-600 hover:text-red-700 text-xl transition"
-                aria-label="Facebook"
               >
                 <FaFacebookF />
               </a>
@@ -163,7 +215,6 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-red-600 hover:text-red-700 text-xl transition"
-                aria-label="Instagram"
               >
                 <FaInstagram />
               </a>
@@ -174,7 +225,6 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-red-600 hover:text-red-700 text-xl transition"
-                aria-label="TikTok"
               >
                 <FaTiktok />
               </a>
@@ -183,17 +233,16 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
         </div>
       )}
 
-      {/* 🔹 Menú de categorías deslizable táctil */}
       <nav
         ref={categoryRef}
         className="flex overflow-x-auto overflow-y-hidden whitespace-nowrap items-center gap-4 border-b pb-2 scrollbar-hide touch-pan-x"
       >
         <button
           onClick={() => onSelectCategory("Todos")}
-          className={`relative py-2 px-4 flex-shrink-0 ${
+          className={`relative py-2 px-5 rounded-full transition-all duration-300 flex-shrink-0 ${
             selectedCategory === "Todos"
-              ? "text-[#F0320C] before:w-1/2 before:h-[2px] before:absolute before:bg-[#F0320C] before:left-0 before:rounded-full before:-bottom-[1px]"
-              : ""
+              ? "bg-[#F0580C] text-white"
+              : "bg-transparent text-gray-700 hover:bg-gray-100"
           }`}
         >
           Todos
@@ -203,16 +252,31 @@ const Header = ({ darkMode, selectedCategory, onSelectCategory, onSearch }) => {
           <button
             key={cat.id_categoria}
             onClick={() => onSelectCategory(cat.id_categoria)}
-            className={`relative py-2 px-4 flex-shrink-0 ${
+            className={`relative py-2 px-5 rounded-full transition-all duration-300 flex-shrink-0 ${
               selectedCategory === cat.id_categoria
-                ? "text-[#F0320C] before:w-1/2 before:h-[2px] before:absolute before:bg-[#F0320C] before:left-0 before:rounded-full before:-bottom-[1px]"
-                : ""
+                ? "bg-[#F0580C] text-white"
+                : "bg-transparent text-gray-700 hover:bg-gray-100"
             }`}
           >
             {cat.nombre}
           </button>
         ))}
       </nav>
+
+      {showDots && (
+        <div className="flex justify-center mt-2 mb-3 gap-2">
+          {[...Array(3)].map((_, i) => (
+            <span
+              key={i}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                Math.round(scrollPosition * 2) === i
+                  ? "bg-red-600"
+                  : "bg-gray-300"
+              }`}
+            ></span>
+          ))}
+        </div>
+      )}
     </header>
   );
 };

@@ -64,7 +64,7 @@ const CategoryPage = () => {
         <HeaderAdmin />
         <main className="flex-grow p-8 overflow-y-auto relative">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Categorías</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Productos</h1>
             <button
               onClick={() => {
                 setEditingCategory(null); // Creamos nueva categoría
@@ -72,7 +72,7 @@ const CategoryPage = () => {
               }}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition"
             >
-              + Crear Categoría
+              + Crear Producto
             </button>
           </div>
 

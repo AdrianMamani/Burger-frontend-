@@ -15,8 +15,10 @@ const SidebarAdmin = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [categorias, setCategorias] = useState([]);
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [nombreEmpresa, setNombreEmpresa] = useState("");
 
-  // --- Traer categorías desde la API ---
+  // --- Traer categorías ---
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
@@ -28,6 +30,38 @@ const SidebarAdmin = () => {
       }
     };
     fetchCategorias();
+  }, []);
+
+  // --- Traer logo desde la API ---
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const res = await fetch("https://apiricoton.cartavirtual.shop/api/recursos-empresa");
+        const data = await res.json();
+        if (data && data.logo_url) {
+          setLogoUrl(`https://apiricoton.cartavirtual.shop/${data.logo_url}`);
+        }
+      } catch (error) {
+        console.error("Error al traer el logo:", error);
+      }
+    };
+    fetchLogo();
+  }, []);
+
+  // --- Traer nombre de la empresa ---
+  useEffect(() => {
+    const fetchEmpresa = async () => {
+      try {
+        const res = await fetch("https://apiricoton.cartavirtual.shop/api/empresa");
+        const data = await res.json();
+        if (data && data.nombre) {
+          setNombreEmpresa(data.nombre);
+        }
+      } catch (error) {
+        console.error("Error al traer el nombre de la empresa:", error);
+      }
+    };
+    fetchEmpresa();
   }, []);
 
   const sections = [
@@ -63,20 +97,32 @@ const SidebarAdmin = () => {
   };
 
   return (
-    <aside className="fixed top-0 left-0 bottom-0 w-64 bg-[#1F1D2B] text-white flex flex-col shadow-xl">
-      {/* Encabezado con imagen */}
-      <div className="p-6 flex flex-col items-center justify-center border-b border-gray-700">
-        <div className="w-48 h-36 overflow-hidden shadow-lg flex items-center justify-center rounded-xl">
-          <img
-            src="/logo_administrador.png" // logo
-            alt="Logo Admin"
-            className="w-full h-full object-contain"
-          />
+    <aside className="fixed top-0 left-0 bottom-0 w-64 bg-[#1F1F1F] text-white flex flex-col shadow-xl overflow-hidden">
+      {/* Encabezado con logo desde API */}
+      <div className="pt-5 pb-3 flex flex-col items-center justify-center border-b border-gray-700">
+        <div className="w-40 h-28 flex items-center justify-center -mt-2">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="Logo Admin"
+              className="w-full h-full object-contain select-none bg-transparent border-none shadow-none"
+              draggable="false"
+            />
+          ) : (
+            <span className="text-gray-400 text-sm">Cargando logo...</span>
+          )}
         </div>
+
+        {/* Nombre de la empresa */}
+        {nombreEmpresa && (
+          <p className="mt-1 text-base font-semibold text-center text-white">
+            {nombreEmpresa}
+          </p>
+        )}
       </div>
 
       {/* NAV PRINCIPAL */}
-      <nav className="flex-1 p-4 overflow-y-auto">
+      <nav className="flex-1 p-4 overflow-y-auto custom-scroll">
         {sections.map((section, idx) => (
           <div key={idx} className="mb-6">
             <h3 className="text-sm uppercase text-gray-400 mb-2 font-semibold tracking-wider">
@@ -90,8 +136,8 @@ const SidebarAdmin = () => {
                     to={item.path}
                     className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
                       location.pathname === item.path
-                        ? "bg-[#ec7c6a] text-white"
-                        : "text-gray-300 hover:bg-[#ec7c6a] hover:text-white"
+                        ? "bg-[#FF6D24] text-white"
+                        : "text-gray-300 hover:bg-[#FF6D24] hover:text-white"
                     }`}
                   >
                     <span className="text-lg">{item.icon}</span>
@@ -110,8 +156,8 @@ const SidebarAdmin = () => {
                             to={sub.path}
                             className={`block px-3 py-1 rounded-md text-sm transition-colors ${
                               location.pathname === sub.path
-                                ? "bg-[#ec7c6a] text-white"
-                                : "text-gray-400 hover:bg-[#ec7c6a] hover:text-white"
+                                ? "bg-[#FF6D24] text-white"
+                                : "text-gray-400 hover:bg-[#FF6D24] hover:text-white"
                             }`}
                           >
                             {sub.name}
@@ -138,8 +184,19 @@ const SidebarAdmin = () => {
         </button>
       </div>
 
-      {/* Estilos para ocultar scrollbar */}
+      {/* Estilos personalizados */}
       <style>{`
+        /* Quitar scroll vertical en todo el sidebar */
+        aside::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+        }
+        aside {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        /* Quitar scroll visible dentro de las sublistas */
         .custom-scroll::-webkit-scrollbar {
           width: 0px;
           background: transparent;

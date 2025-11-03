@@ -264,7 +264,7 @@ const HeaderAdmin = () => {
           <RiSearchLine className="absolute left-3 top-3 text-gray-400 text-xl" />
           <input
             type="text"
-            placeholder="Buscar..."
+            placeholder="Buscar seccion..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ec7c6a] outline-none"

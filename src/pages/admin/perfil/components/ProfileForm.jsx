@@ -355,7 +355,7 @@ const ProfileForm = () => {
             />
 
             {getYouTubeEmbedUrl(formData.youtube) && (
-              <div className="w-full h-[180px]">
+              <div className="w-full h-[480px]">
                 <iframe
                   className="w-full h-full rounded-lg"
                   src={getYouTubeEmbedUrl(formData.youtube)}
