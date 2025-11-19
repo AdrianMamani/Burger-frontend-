@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import swal from "sweetalert";
+import { RiImageAddLine } from "react-icons/ri";
 
 const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) => {
   const isEditMode = !!initialData;
@@ -14,6 +15,7 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
 
   const [loading, setLoading] = useState(false);
 
+  // Carga datos si edita
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -24,15 +26,26 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
         previewUrl: initialData.imageUrl || null,
       });
     } else {
-      setFormData({ name: "", description: "", price: "", imageFile: null, previewUrl: null });
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        imageFile: null,
+        previewUrl: null,
+      });
     }
   }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+
     if (name === "imageFile" && files.length > 0) {
       const file = files[0];
-      setFormData({ ...formData, imageFile: file, previewUrl: URL.createObjectURL(file) });
+      setFormData({
+        ...formData,
+        imageFile: file,
+        previewUrl: URL.createObjectURL(file),
+      });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -49,9 +62,7 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
       form.append("precio", formData.price);
       form.append("estado", 1);
 
-      // --- Enviamos id_categoria ---
       if (categoryId) form.append("id_categoria", categoryId);
-
       if (formData.imageFile) form.append("imagen", formData.imageFile);
 
       let url = "https://apiricoton.cartavirtual.shop/api/producto";
@@ -70,6 +81,7 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
 
       const text = await response.text();
       let data;
+
       try {
         data = JSON.parse(text);
       } catch {
@@ -80,16 +92,27 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
 
       if (!response.ok) {
         swal("Error", data.message || "Ocurrió un error al guardar el producto", "error");
-        setLoading(false);
         return;
       }
 
-      swal("Éxito", isEditMode ? "Producto actualizado correctamente" : "Producto creado correctamente", "success");
+      swal(
+        "Éxito",
+        isEditMode ? "Producto actualizado correctamente" : "Producto creado correctamente",
+        "success"
+      );
 
-      if (!isEditMode) setFormData({ name: "", description: "", price: "", imageFile: null, previewUrl: null });
+      if (!isEditMode) {
+        setFormData({
+          name: "",
+          description: "",
+          price: "",
+          imageFile: null,
+          previewUrl: null,
+        });
+      }
+
       if (onSuccess) onSuccess(data);
     } catch (error) {
-      console.error(error);
       swal("Error de conexión", error.message, "error");
     } finally {
       setLoading(false);
@@ -99,8 +122,10 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+
+        {/* 🏷 Nombre */}
         <label className="block">
-          <span className="text-gray-700">Nombre</span>
+          <span className="text-gray-700 font-medium">Nombre</span>
           <input
             type="text"
             name="name"
@@ -111,50 +136,73 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
           />
         </label>
 
+        {/* 📝 Descripción */}
         <label className="block">
-          <span className="text-gray-700">Descripción</span>
+          <span className="text-gray-700 font-medium">Descripción</span>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
+            rows="2"
             className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
-            rows={2}
             required
           />
         </label>
 
+        {/* 💲 Precio */}
         <label className="block">
-          <span className="text-gray-700">Precio</span>
+          <span className="text-gray-700 font-medium">Precio</span>
           <input
             type="number"
             name="price"
             value={formData.price}
             onChange={handleChange}
-            className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
             step="0.01"
+            className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
             required
           />
         </label>
 
-        <label className="block">
-          <span className="text-gray-700">Imagen</span>
-          <input
-            type="file"
-            name="imageFile"
-            accept="image/*"
-            onChange={handleChange}
-            className="mt-1 w-full"
-          />
+        {/* 🖼 Imagen */}
+        <div>
+          <span className="text-gray-700 font-medium">Imagen</span>
+
+          <div className="mt-2 flex items-center space-x-3">
+            <label
+              htmlFor="imageFile"
+              className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm rounded-lg shadow hover:bg-blue-700 transition-all cursor-pointer"
+            >
+              <RiImageAddLine size={18} className="mr-2" />
+              Seleccionar imagen
+            </label>
+
+            <input
+              id="imageFile"
+              type="file"
+              name="imageFile"
+              accept="image/*"
+              onChange={handleChange}
+              className="hidden"
+            />
+
+            {formData.imageFile && (
+              <span className="text-gray-600 text-sm truncate max-w-[150px]">
+                {formData.imageFile.name}
+              </span>
+            )}
+          </div>
+
           {formData.previewUrl && (
             <img
               src={formData.previewUrl}
               alt="Preview"
-              className="mt-3 w-32 h-32 object-cover rounded-lg border"
+              className="mt-4 w-full h-[260px] object-contain rounded-xl border shadow-sm bg-white"
             />
           )}
-        </label>
+        </div>
       </div>
 
+      {/* Botones */}
       <div className="border-t pt-4 mt-4 flex justify-end space-x-3 bg-white sticky bottom-0">
         <button
           type="button"
@@ -164,9 +212,10 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
         >
           Cancelar
         </button>
+
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
+          className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg shadow"
           disabled={loading}
         >
           {loading ? "Guardando..." : isEditMode ? "Actualizar" : "Guardar"}

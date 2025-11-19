@@ -6,47 +6,43 @@ import NewProducto from "../components/NewCategory";
 
 const CategoryPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null); // Para editar
-  const [empresaNombre, setEmpresaNombre] = useState("Bembos"); // valor por defecto
-    
-      // --- Traer nombre de la empresa ---
-      useEffect(() => {
-        const fetchEmpresa = async () => {
-          try {
-            const res = await fetch("http://127.0.0.1:8000/api/empresa");
-            const data = await res.json();
-            if (data && data.nombre) setEmpresaNombre(data.nombre);
-          } catch (error) {
-            console.error("Error al obtener el nombre de la empresa:", error);
-          }
-        };
-        fetchEmpresa();
-      }, []);
-    
-      // --- Actualizar título de la pestaña ---
-      useEffect(() => {
-        document.title = `${empresaNombre} - Administrador/Categorias`;
-      }, [empresaNombre]);
-    
-      // --- Poner favicon de la imagen admin.png ---
-      useEffect(() => {
-        let link = document.querySelector("link[rel*='icon']");
-        if (!link) {
-          link = document.createElement("link");
-          link.rel = "icon";
-          document.head.appendChild(link);
-        }
-        link.href = "/menu.png"; // ruta relativa a public
-      }, []);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [empresaNombre, setEmpresaNombre] = useState("Bembos");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0); // 👈 para recargar tabla
 
-  const handleCreateCategory = (data) => {
-    console.log("Nueva categoría agregada:", data);
-    // Aquí llamarías a tu API
-  };
+  useEffect(() => {
+    const fetchEmpresa = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/empresa");
+        const data = await res.json();
+        if (data && data.nombre) setEmpresaNombre(data.nombre);
+      } catch (error) {
+        console.error("Error al obtener el nombre de la empresa:", error);
+      }
+    };
+    fetchEmpresa();
+  }, []);
 
-  const handleEditCategory = (data) => {
-    console.log("Categoría editada:", data);
-    // Aquí llamarías a tu API
+  useEffect(() => {
+    document.title = `${empresaNombre} - Administrador/Categorías`;
+  }, [empresaNombre]);
+
+  useEffect(() => {
+    let link = document.querySelector("link[rel*='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = "/menu.png";
+  }, []);
+
+  // ✅ Al guardar o editar: refrescamos la tabla
+  const handleSaveCategory = (data) => {
+    setRefreshKey((prev) => prev + 1);
+    setIsModalOpen(false);
+    setEditingCategory(null);
   };
 
   return (
@@ -57,33 +53,47 @@ const CategoryPage = () => {
 
       <div className="flex-grow flex flex-col">
         <HeaderAdmin />
-        <main className="flex-grow p-8 overflow-y-auto relative">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Categorías</h1>
-            <button
-              onClick={() => {
-                setEditingCategory(null); // Creamos nueva categoría
-                setIsModalOpen(true);
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition"
-            >
-              + Crear Categoría
-            </button>
-          </div>
 
-          <ProductoTable 
-            onEdit={(category) => {
-              setEditingCategory(category);
-              setIsModalOpen(true);
-            }}
-          />
+        <main className="flex-grow p-8 overflow-y-auto relative">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">
+              Categorías
+            </h1>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 mb-8">
+              <div className="w-full sm:w-[85%]">
+                <input
+                  type="text"
+                  placeholder="Buscar categoría..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+
+              <div className="w-full sm:w-[15%]">
+                <button
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-green-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md transition w-full"
+                >
+                  + Nueva categoría
+                </button>
+              </div>
+            </div>
+
+            {/* 🗂 Tabla de categorías */}
+            <ProductoTable search={searchTerm} refreshTrigger={refreshKey} />
+          </div>
 
           {/* Modal lateral */}
           <NewProducto
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             initialData={editingCategory}
-            onSubmit={editingCategory ? handleEditCategory : handleCreateCategory}
+            onSubmit={handleSaveCategory} // 👈 refresca automáticamente
           />
         </main>
       </div>

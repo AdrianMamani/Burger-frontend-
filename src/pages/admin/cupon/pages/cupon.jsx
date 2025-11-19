@@ -6,10 +6,11 @@ import NewCupon from "../components/NewCupon";
 
 const CuponPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCupon, setEditingCupon] = useState(null); // Para editar
-  const [empresaNombre, setEmpresaNombre] = useState("Bembos"); // valor por defecto
-    
-  // --- Traer nombre de la empresa ---
+  const [editingCupon, setEditingCupon] = useState(null);
+  const [empresaNombre, setEmpresaNombre] = useState("Bembos");
+  const [cupones, setCupones] = useState([]);
+
+  // --- Traer nombre de empresa ---
   useEffect(() => {
     const fetchEmpresa = async () => {
       try {
@@ -23,12 +24,27 @@ const CuponPage = () => {
     fetchEmpresa();
   }, []);
 
-  // --- Actualizar título de la pestaña ---
+  // --- Cargar cupones ---
+  const fetchCupones = async () => {
+    try {
+      const res = await fetch("https://apiricoton.cartavirtual.shop/api/cupon");
+      const data = await res.json();
+      setCupones(data);
+    } catch (error) {
+      console.error("Error al cargar cupones:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCupones();
+  }, []);
+
+  // --- Cambiar título del documento ---
   useEffect(() => {
     document.title = `${empresaNombre} - Administrador/Cupones`;
   }, [empresaNombre]);
 
-  // --- Poner favicon de la imagen admin.png ---
+  // --- Favicon ---
   useEffect(() => {
     let link = document.querySelector("link[rel*='icon']");
     if (!link) {
@@ -36,17 +52,39 @@ const CuponPage = () => {
       link.rel = "icon";
       document.head.appendChild(link);
     }
-    link.href = "/menu.png"; // ruta relativa a public
+    link.href = "/menu.png";
   }, []);
 
-  const handleCreateCupon = (data) => {
-    console.log("Nuevo cupón agregado:", data);
-    // Aquí llamarías a tu API
+  // --- Crear nuevo cupón ---
+  const handleCreateCupon = (nuevoCupon) => {
+    // ✅ Se muestra al instante en la tabla
+    setCupones((prev) => [nuevoCupon, ...prev]);
+
+    // Cierra el modal
+    setIsModalOpen(false);
+
+    // 🔁 Espera 2 segundos y recarga toda la página
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
   };
 
-  const handleEditCupon = (data) => {
-    console.log("Cupón editado:", data);
-    // Aquí llamarías a tu API
+  // --- Editar cupón ---
+  const handleEditCupon = (cuponEditado) => {
+    // ✅ Actualiza al instante
+    setCupones((prev) =>
+      prev.map((c) =>
+        c.id_cupon === cuponEditado.id_cupon ? cuponEditado : c
+      )
+    );
+
+    // Cierra el modal
+    setIsModalOpen(false);
+
+    // 🔁 Espera 2 segundos y recarga toda la página
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
   };
 
   return (
@@ -62,7 +100,7 @@ const CuponPage = () => {
             <h1 className="text-3xl font-bold text-gray-800">Cupones</h1>
             <button
               onClick={() => {
-                setEditingCupon(null); // Creamos nuevo cupón
+                setEditingCupon(null);
                 setIsModalOpen(true);
               }}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition"
@@ -71,19 +109,24 @@ const CuponPage = () => {
             </button>
           </div>
 
+          {/* 🔹 Tabla de cupones */}
           <CuponTable
+            cupones={cupones}
             onEdit={(cupon) => {
               setEditingCupon(cupon);
               setIsModalOpen(true);
             }}
           />
 
-          {/* Modal lateral */}
+          {/* 🔹 Modal */}
           <NewCupon
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             initialData={editingCupon}
-            onSubmit={editingCupon ? handleEditCupon : handleCreateCupon}
+            onSuccess={(nuevoCupon, isEditMode) => {
+              if (isEditMode) handleEditCupon(nuevoCupon);
+              else handleCreateCupon(nuevoCupon);
+            }}
           />
         </main>
       </div>

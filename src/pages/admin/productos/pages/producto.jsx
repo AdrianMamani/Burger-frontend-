@@ -5,91 +5,113 @@ import ProductoTable from "../components/ProductoTable";
 import NewProducto from "../components/NewProducto";
 import { useParams } from "react-router-dom";
 
-
-const CategoryPage = () => {
+const ProductPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null); // Para editar
-  const [empresaNombre, setEmpresaNombre] = useState("Bembos"); // valor por defecto
-      
-        // --- Traer nombre de la empresa ---
-        useEffect(() => {
-          const fetchEmpresa = async () => {
-            try {
-              const res = await fetch("https://apiricoton.cartavirtual.shop/api/empresa");
-              const data = await res.json();
-              if (data && data.nombre) setEmpresaNombre(data.nombre);
-            } catch (error) {
-              console.error("Error al obtener el nombre de la empresa:", error);
-            }
-          };
-          fetchEmpresa();
-        }, []);
-      
-        // --- Actualizar título de la pestaña ---
-        useEffect(() => {
-          document.title = `${empresaNombre} - Administrador/Productos`;
-        }, [empresaNombre]);
-      
-        // --- Poner favicon de la imagen admin.png ---
-        useEffect(() => {
-          let link = document.querySelector("link[rel*='icon']");
-          if (!link) {
-            link = document.createElement("link");
-            link.rel = "icon";
-            document.head.appendChild(link);
-          }
-          link.href = "/menu.png"; // ruta relativa a public
-        }, []);
-      
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [empresaNombre, setEmpresaNombre] = useState("Bembos");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0); // 🔄 recargar tabla al crear/editar
 
-  const handleCreateCategory = (data) => {
-    console.log("Nueva categoría agregada:", data);
-    // Aquí llamarías a tu API
+  const { id_categoria } = useParams(); // obtiene la categoría actual desde la URL
+
+  // 🟦 Obtener nombre de la empresa
+  useEffect(() => {
+    const fetchEmpresa = async () => {
+      try {
+        const res = await fetch("https://apiricoton.cartavirtual.shop/api/empresa");
+        const data = await res.json();
+        if (data && data.nombre) setEmpresaNombre(data.nombre);
+      } catch (error) {
+        console.error("Error al obtener nombre de empresa:", error);
+      }
+    };
+    fetchEmpresa();
+  }, []);
+
+  // 🟦 Cambiar título del navegador
+  useEffect(() => {
+    document.title = `${empresaNombre} - Administrador/Productos`;
+  }, [empresaNombre]);
+
+  // 🟦 Colocar favicon
+  useEffect(() => {
+    let link = document.querySelector("link[rel*='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = "/menu.png";
+  }, []);
+
+  // 🟩 Recargar tabla al guardar o editar
+  const handleSaveProduct = () => {
+    setRefreshKey((prev) => prev + 1);
+    setIsModalOpen(false);
+    setEditingProduct(null);
   };
-
-  const handleEditCategory = (data) => {
-    console.log("Categoría editada:", data);
-    // Aquí llamarías a tu API
-  };
-  const { id_categoria } = useParams();
-
 
   return (
     <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
       <div className="w-64 bg-gray-800 text-white flex-shrink-0">
         <Sidebar />
       </div>
 
+      {/* Main */}
       <div className="flex-grow flex flex-col">
         <HeaderAdmin />
+
         <main className="flex-grow p-8 overflow-y-auto relative">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Productos</h1>
-            <button
-              onClick={() => {
-                setEditingCategory(null); // Creamos nueva categoría
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">
+              Productos
+            </h1>
+
+            {/* 🔍 Barra de búsqueda + botón */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 mb-8">
+              <div className="w-full sm:w-[85%]">
+                <input
+                  type="text"
+                  placeholder="Buscar producto..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+
+              <div className="w-full sm:w-[15%]">
+                <button
+                  onClick={() => {
+                    setEditingProduct(null);
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg shadow-md transition w-full"
+                >
+                  + Nuevo producto
+                </button>
+              </div>
+            </div>
+
+            {/* 🗂 Tabla de productos */}
+            <ProductoTable
+              search={searchTerm}
+              refreshTrigger={refreshKey}
+              categoryId={id_categoria}
+              onEdit={(product) => {
+                setEditingProduct(product);
                 setIsModalOpen(true);
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition"
-            >
-              + Crear Producto
-            </button>
+            />
           </div>
-
-          <ProductoTable 
-            onEdit={(category) => {
-              setEditingCategory(category);
-              setIsModalOpen(true);
-            }}
-          />
 
           {/* Modal lateral */}
           <NewProducto
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
+            initialData={editingProduct}
             categoryId={id_categoria}
-            initialData={editingCategory}
-            onSubmit={editingCategory ? handleEditCategory : handleCreateCategory}
+            onSubmit={handleSaveProduct} // refresca la tabla automáticamente
           />
         </main>
       </div>
@@ -97,4 +119,4 @@ const CategoryPage = () => {
   );
 };
 
-export default CategoryPage;
+export default ProductPage;

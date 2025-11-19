@@ -1,16 +1,33 @@
+// 🔥 CÓDIGO COMPLETO DE Card.jsx CON DESCUENTO EN addToCart
+
 import React, { useState, useEffect } from "react";
 import { FaShoppingCart } from "react-icons/fa";
-import { RiCloseLine } from "react-icons/ri";
+import { IoIosArrowBack } from "react-icons/io";
+import { RiCoupon2Line } from "react-icons/ri";
+import { TbDiscount2 } from "react-icons/tb";
 
 const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [categoryInfo, setCategoryInfo] = useState(null);
   const [error, setError] = useState(null);
+  const [cupones, setCupones] = useState([]);
 
   const openModal = (product) => setSelectedProduct(product);
   const closeModal = () => setSelectedProduct(null);
 
-  // Obtener datos de la categoría seleccionada
+  useEffect(() => {
+    const fetchCupones = async () => {
+      try {
+        const res = await fetch("https://apiricoton.cartavirtual.shop/api/cupon");
+        const data = await res.json();
+        setCupones(data);
+      } catch (err) {
+        console.error("❌ Error al obtener cupones:", err);
+      }
+    };
+    fetchCupones();
+  }, []);
+
   useEffect(() => {
     const fetchCategory = async () => {
       if (!selectedCategory || selectedCategory === "Todos") {
@@ -19,36 +36,19 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
       }
 
       try {
-        const response = await fetch(
-          "https://apiricoton.cartavirtual.shop/api/categorias"
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-        }
-
+        const response = await fetch("https://apiricoton.cartavirtual.shop/api/categorias");
         const allCategories = await response.json();
 
         const found = allCategories.find((cat) => {
-          if (typeof selectedCategory === "number") {
+          if (typeof selectedCategory === "number")
             return cat.id_categoria === selectedCategory;
-          }
-          if (typeof selectedCategory === "string") {
+          if (typeof selectedCategory === "string")
             return cat.nombre.toLowerCase() === selectedCategory.toLowerCase();
-          }
-          return false;
         });
 
-        if (!found) {
-          throw new Error(
-            `No se encontró la categoría con valor "${selectedCategory}"`
-          );
-        }
-
+        if (!found) throw new Error("Categoría no encontrada");
         setCategoryInfo(found);
-        setError(null);
       } catch (err) {
-        console.error("❌ Error fetching category:", err);
         setError(`Error al obtener la categoría: ${err.message}`);
         setCategoryInfo(null);
       }
@@ -57,20 +57,41 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
     fetchCategory();
   }, [selectedCategory]);
 
+  const obtenerDescuento = (product) => {
+    const hoy = new Date();
+    return (
+      cupones.find(
+        (c) =>
+          c.estado === true &&
+          new Date(c.fecha_inicio) <= hoy &&
+          new Date(c.fecha_fin) >= hoy &&
+          (c.id_producto === product.id_producto ||
+            c.id_categoria === product.id_categoria)
+      ) || null
+    );
+  };
+
+  const calcularPrecioConDescuento = (precio, cup) => {
+    if (!cup) return precio;
+    if (cup.tipo === "porcentaje")
+      return (precio - precio * (cup.valor / 100)).toFixed(2);
+    return (precio - cup.valor).toFixed(2);
+  };
+
   return (
     <div className="w-full mt-6 md:mt-8">
       {error && (
-        <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4 text-center font-semibold">
+        <div className="bg-red-100 text-red-700 p-3 rounded-md mb-3 text-center font-semibold">
           {error}
         </div>
       )}
 
-      {/* Banner de categoría (solo móvil) */}
+      {/* BANNER MÓVIL */}
       {categoryInfo && (
         <div className="block md:hidden w-full mb-4 px-3">
           <div
             className={`flex items-center p-4 w-full rounded-2xl transition-all duration-300
-              text-white shadow-lg`}
+                text-white shadow-lg`}
             style={{
               background: `linear-gradient(135deg, ${
                 categoryInfo.dominantColor || "#F0320C"
@@ -102,8 +123,8 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
         </div>
       )}
 
-      {/* Grid de tarjetas */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 justify-items-center px-2 sm:px-3">
+      {/* GRID */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 px-2 sm:px-3">
         {categoryInfo && (
           <div className="hidden md:block w-full">
             <div
@@ -144,49 +165,92 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
           </div>
         )}
 
-        {/* Tarjetas de productos */}
-        {products.map((product) => (
-          <div
-            key={product.id_producto}
-            className={`flex flex-col justify-between p-3 w-full rounded-xl border transition-all duration-300 cursor-pointer
-              ${
+        {/* TARJETAS */}
+        {products.map((product) => {
+          const cup = obtenerDescuento(product);
+          const nuevoPrecio = calcularPrecioConDescuento(product.precio, cup);
+
+          return (
+            <div
+              key={product.id_producto}
+              className={`relative flex flex-col justify-between p-3 w-full rounded-xl border cursor-pointer transition-all ${
                 darkMode
                   ? "bg-[#262837] border-gray-700 text-gray-300"
-                  : "bg-gray-50 border-gray-200 text-gray-900"
+                  : "bg-white border-gray-200 text-gray-900"
               }`}
-            onClick={() => openModal(product)}
-          >
-            <img
-              src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
-              alt={product.nombre}
-              className="w-28 h-28 md:w-32 md:h-32 object-cover rounded-lg mx-auto"
-              onError={(e) =>
-                (e.target.src =
-                  "https://via.placeholder.com/150?text=Sin+Imagen")
-              }
-            />
-            <div className="flex flex-col text-left w-full mt-3 flex-grow">
-              <h4 className="font-semibold text-base md:text-lg">
-                {product.nombre}
-              </h4>
-              <p className="text-sm mt-1">Precio: S/ {product.precio}</p>
-            </div>
-
-            <button
-              className="mt-3 w-full py-2 rounded-lg font-medium flex items-center justify-center bg-[#F0320C] hover:bg-[#d42c0b] text-white"
-              onClick={(e) => {
-                e.stopPropagation(); // evita abrir modal al hacer click en añadir
-                addToCart(product);
-              }}
+              onClick={() => openModal(product)}
             >
-              <FaShoppingCart size={18} className="mr-2" />
-              Añadir
-            </button>
-          </div>
-        ))}
+              {cup && (
+                <div className="absolute top-2 right-2 z-20">
+                  <div className="bg-white backdrop-blur-sm p-0.5 rounded-full">
+                    <TbDiscount2 size={32} className="text-red-600" />
+                  </div>
+                </div>
+              )}
+
+              <img
+                src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
+                alt={product.nombre}
+                className="w-36 h-36 md:w-44 md:h-44 object-cover rounded-lg mx-auto"
+              />
+
+              <div className="flex flex-col mt-3 flex-grow text-left">
+                <h4 className="font-semibold text-base md:text-lg">
+                  {product.nombre}
+                </h4>
+
+                {cup ? (
+                  <div className="mt-1">
+                    <p className="text-xs line-through opacity-70">
+                      S/ {product.precio}
+                    </p>
+
+                    <div className="flex items-center gap-1">
+                      <p className="text-red-500 font-bold">S/ {nuevoPrecio}</p>
+                      <span className="text-[10px] text-red-600 font-semibold">
+                        ({cup.tipo === "porcentaje"
+                          ? `${cup.valor}%`
+                          : `-S/ ${cup.valor}`})
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm mt-1">Precio: S/ {product.precio}</p>
+                )}
+              </div>
+
+              {/* 🔥 BOTÓN CORREGIDO */}
+              <button
+                className="mt-3 w-full py-2 rounded-lg flex justify-center items-center bg-[#F0320C] hover:bg-[#d42c0b] text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  const cup = obtenerDescuento(product);
+
+                  let descuento = 0;
+                  if (cup) {
+                    descuento =
+                      cup.tipo === "porcentaje"
+                        ? product.precio * (cup.valor / 100)
+                        : parseFloat(cup.valor);
+                  }
+
+                  addToCart({
+                    ...product,
+                    descuento,
+                    cupon: cup || null,
+                    precioFinal: product.precio - descuento,
+                  });
+                }}
+              >
+                <FaShoppingCart size={18} className="mr-2" /> Añadir
+              </button>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Modal detalle producto */}
+      {/* MODAL */}
       {selectedProduct && (
         <>
           <div
@@ -196,70 +260,92 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
 
           <div
             className={`fixed right-0 top-0 h-full z-50 overflow-y-auto flex flex-col justify-between ${
-              darkMode ? "bg-[#1F1D2B] text-gray-300" : "bg-white text-gray-900"
+              darkMode
+                ? "bg-[#1F1D2B] text-gray-300"
+                : "bg-white text-gray-900"
             } w-full max-w-[420px]`}
           >
-            <div
-              className={`flex items-center justify-between px-5 py-4 border-b relative ${
-                darkMode ? "border-gray-700" : "border-gray-200"
-              }`}
-            >
-              <h2 className="text-lg font-semibold mx-auto">Detalle del producto</h2>
+            <div className="flex items-center px-5 py-4 lg:hidden">
               <button
                 onClick={closeModal}
-                className="absolute left-4 top-4 bg-gray-300 dark:bg-gray-600 text-black dark:text-white rounded-full w-9 h-9 flex items-center justify-center hover:scale-110 transition-transform"
+                className="absolute top-4 left-4 z-[999] bg-black/50 hover:bg-black/70 text-white p-2 rounded-full shadow-lg md:hidden"
               >
-                <RiCloseLine size={22} />
+                <IoIosArrowBack size={24} />
               </button>
             </div>
 
-            <div className="flex-grow overflow-y-auto pt-6 px-6 pb-2">
-              <div className="flex justify-center mb-6">
-                <img
-                  src={`https://apiricoton.cartavirtual.shop/${selectedProduct.imagen_url}`}
-                  alt={selectedProduct.nombre}
-                  className="w-56 h-56 sm:w-60 sm:h-60 object-cover rounded-xl"
-                  onError={(e) =>
-                    (e.target.src =
-                      "https://via.placeholder.com/250?text=Sin+Imagen")
-                  }
-                />
-              </div>
-
-              <hr
-                className={`w-full mx-auto mb-4 ${
-                  darkMode ? "border-gray-700" : "border-gray-200"
-                }`}
+            <div className="flex flex-col items-center px-6">
+              <img
+                src={`https://apiricoton.cartavirtual.shop/${selectedProduct.imagen_url}`}
+                className="w-80 h-80 rounded-2xl mt-4"
               />
 
-              <div className="text-left flex flex-col pt-2">
-                <h4 className="text-xl font-bold mb-2">{selectedProduct.nombre}</h4>
-                <p className="text-lg mb-2">
-                  <span className="font-semibold">Precio:</span> S/ {selectedProduct.precio}
-                </p>
-                <p
-                  className={`text-base mb-6 ${
-                    darkMode ? "text-gray-200" : "text-gray-900"
-                  }`}
-                >
-                  <span className="font-semibold">Descripción:</span> {selectedProduct.descripcion}
+              <div className="w-full mt-5">
+                <h4 className="text-2xl font-bold">{selectedProduct.nombre}</h4>
+
+                {(() => {
+                  const cup = obtenerDescuento(selectedProduct);
+                  const nuevoPrecio = calcularPrecioConDescuento(
+                    selectedProduct.precio,
+                    cup
+                  );
+
+                  return cup ? (
+                    <div className="mt-4">
+                      <p className="line-through text-gray-400 text-sm">
+                        S/ {selectedProduct.precio}
+                      </p>
+
+                      <div className="flex items-center gap-2">
+                        <p className="text-red-600 font-bold text-2xl">
+                          S/ {nuevoPrecio}
+                        </p>
+                        <span className="text-sm text-red-500 font-semibold">
+                          ({cup.tipo === "porcentaje"
+                            ? `${cup.valor}%`
+                            : `-S/ ${cup.valor}`})
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xl font-semibold mt-4">
+                      S/ {selectedProduct.precio}
+                    </p>
+                  );
+                })()}
+
+                <p className="text-base mt-4 mb-6">
+                  {selectedProduct.descripcion}
                 </p>
               </div>
             </div>
 
-            <div
-              className={`p-4 border-t ${
-                darkMode ? "border-gray-700" : "border-gray-200"
-              }`}
-            >
+            {/* 🔥 BOTÓN CORREGIDO DEL MODAL */}
+            <div className="p-5 flex gap-4">
               <button
-                className="w-full py-3 rounded-lg font-medium bg-[#F0320C] hover:bg-[#d42c0b] text-white"
+                className="w-full py-3 rounded-2xl font-medium bg-black text-white"
                 onClick={() => {
-                  addToCart(selectedProduct);
+                  const cup = obtenerDescuento(selectedProduct);
+
+                  let descuento = 0;
+                  if (cup) {
+                    descuento =
+                      cup.tipo === "porcentaje"
+                        ? selectedProduct.precio * (cup.valor / 100)
+                        : parseFloat(cup.valor);
+                  }
+
+                  addToCart({
+                    ...selectedProduct,
+                    descuento,
+                    cupon: cup || null,
+                    precioFinal: selectedProduct.precio - descuento,
+                  });
+
                   closeModal();
                 }}
               >
-                Añadir
+                Añadir al carrito
               </button>
             </div>
           </div>

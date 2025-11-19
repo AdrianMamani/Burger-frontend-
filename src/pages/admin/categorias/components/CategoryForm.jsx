@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import swal from "sweetalert";
+import { RiImageAddLine } from "react-icons/ri";
 
 const CategoryForm = ({ initialData = null, onCancel, onSuccess }) => {
   const isEditMode = !!initialData;
@@ -107,14 +108,22 @@ const CategoryForm = ({ initialData = null, onCancel, onSuccess }) => {
 
       // Resetear formulario si era creación
       if (!isEditMode) {
-        setFormData({ name: "", description: "", imageFile: null, previewUrl: null });
+        setFormData({
+          name: "",
+          description: "",
+          imageFile: null,
+          previewUrl: null,
+        });
       }
 
       if (onSuccess) onSuccess(data);
-
     } catch (error) {
       console.error("Error en la solicitud:", error);
-      swal("Error de conexión", `No se pudo conectar con el servidor: ${error.message}`, "error");
+      swal(
+        "Error de conexión",
+        `No se pudo conectar con el servidor: ${error.message}`,
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -123,8 +132,9 @@ const CategoryForm = ({ initialData = null, onCancel, onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+        {/* 🏷 Nombre */}
         <label className="block">
-          <span className="text-gray-700">Nombre</span>
+          <span className="text-gray-700 font-medium">Nombre</span>
           <input
             type="text"
             name="name"
@@ -135,8 +145,9 @@ const CategoryForm = ({ initialData = null, onCancel, onSuccess }) => {
           />
         </label>
 
+        {/* 📝 Descripción */}
         <label className="block">
-          <span className="text-gray-700">Descripción</span>
+          <span className="text-gray-700 font-medium">Descripción</span>
           <textarea
             name="description"
             value={formData.description}
@@ -146,25 +157,46 @@ const CategoryForm = ({ initialData = null, onCancel, onSuccess }) => {
           />
         </label>
 
-        <label className="block">
-          <span className="text-gray-700">Imagen</span>
-          <input
-            type="file"
-            name="imageFile"
-            accept="image/*"
-            onChange={handleChange}
-            className="mt-1 w-full"
-          />
+        {/* 🖼 Imagen */}
+        <div>
+          <span className="text-gray-700 font-medium">Imagen</span>
+
+          {/* Botón personalizado */}
+          <div className="mt-2 flex items-center space-x-3">
+            <label
+              htmlFor="imageFile"
+              className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm rounded-lg shadow hover:bg-blue-700 transition-all cursor-pointer"
+            >
+              <RiImageAddLine size={18} className="mr-2" />
+              Seleccionar archivo
+            </label>
+            <input
+              id="imageFile"
+              type="file"
+              name="imageFile"
+              accept="image/*"
+              onChange={handleChange}
+              className="hidden"
+            />
+            {formData.imageFile && (
+              <span className="text-gray-600 text-sm truncate max-w-[150px]">
+                {formData.imageFile.name}
+              </span>
+            )}
+          </div>
+
+          {/* Vista previa grande */}
           {formData.previewUrl && (
             <img
               src={formData.previewUrl}
               alt="Preview"
-              className="mt-3 w-32 h-32 object-cover rounded-lg border"
+              className="mt-4 w-full h-[260px] object-contain rounded-xl border shadow-sm bg-white"
             />
           )}
-        </label>
+        </div>
       </div>
 
+      {/* Botones de acción */}
       <div className="border-t pt-4 mt-4 flex justify-end space-x-3 bg-white sticky bottom-0">
         <button
           type="button"
@@ -176,7 +208,7 @@ const CategoryForm = ({ initialData = null, onCancel, onSuccess }) => {
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
+          className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg shadow"
           disabled={loading}
         >
           {loading ? "Guardando..." : isEditMode ? "Actualizar" : "Guardar"}

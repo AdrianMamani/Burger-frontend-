@@ -1,25 +1,18 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { RiEditLine, RiDeleteBin6Line } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
 import CategoryForm from "./CategoryForm";
 import swal from "sweetalert";
-import { HiArrowLeft, HiArrowRight } from "react-icons/hi";
 
 const API_URL = "https://apiricoton.cartavirtual.shop/api/categorias";
 
-const CategoryTable = () => {
+const CategoryTable = ({ search, refreshTrigger }) => {
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
+  // 🔹 Obtener categorías
   const fetchCategories = async () => {
     setLoading(true);
     try {
@@ -27,7 +20,6 @@ const CategoryTable = () => {
       const data = await res.json();
       setCategories(data);
       setFilteredCategories(data);
-      setCurrentPage(1);
     } catch (error) {
       console.error("Error al obtener categorías:", error);
     } finally {
@@ -35,22 +27,24 @@ const CategoryTable = () => {
     }
   };
 
+  // 🧠 Cargar cuando inicia o cuando el refresh cambia
   useEffect(() => {
-    const handler = setTimeout(() => {
-      if (search.trim() === "") {
-        setFilteredCategories(categories);
-      } else {
-        const filtered = categories.filter(c =>
-          c.nombre.toLowerCase().includes(search.toLowerCase())
-        );
-        setFilteredCategories(filtered);
-      }
-      setCurrentPage(1);
-    }, 300);
+    fetchCategories();
+  }, [refreshTrigger]);
 
-    return () => clearTimeout(handler);
+  // 🔍 Filtro
+  useEffect(() => {
+    if (!search.trim()) {
+      setFilteredCategories(categories);
+    } else {
+      const filtered = categories.filter((c) =>
+        c.nombre.toLowerCase().includes(search.toLowerCase())
+      );
+      setFilteredCategories(filtered);
+    }
   }, [search, categories]);
 
+  // ✏️ Editar (abre modal)
   const handleEdit = (category) => {
     setSelectedCategory({
       id_categoria: category.id_categoria,
@@ -60,6 +54,7 @@ const CategoryTable = () => {
     });
   };
 
+  // 🗑️ Eliminar
   const handleDelete = async (id) => {
     const confirm = await swal({
       title: "¿Eliminar categoría?",
@@ -89,106 +84,79 @@ const CategoryTable = () => {
     setSelectedCategory(null);
   };
 
-  const totalPages = Math.ceil(filteredCategories.length / pageSize);
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredCategories.slice(start, start + pageSize);
-  }, [filteredCategories, currentPage, pageSize]);
+  // 🚫 Bloquear scroll cuando el modal está abierto
+  useEffect(() => {
+    if (selectedCategory) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => (document.body.style.overflow = "auto");
+  }, [selectedCategory]);
 
   return (
-    <div className="relative bg-white p-6 rounded-2xl">
-      {/* Controles: búsqueda y tamaño de página */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-        <div className="flex items-center gap-3">
-          <label className="text-gray-700 font-semibold">Mostrar:</label>
-          <select
-            value={pageSize}
-            onChange={e => setPageSize(Number(e.target.value))}
-            className="border border-gray-300 rounded-lg px-3 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value={10}>10</option>
-            <option value={15}>15</option>
-            <option value={30}>30</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Buscar por nombre..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 w-full sm:w-64 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-      </div>
-
-      {/* Tabla */}
+    <div className="relative">
       {loading ? (
         <p className="text-gray-500">Cargando categorías...</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl shadow-md">
-          <table className="min-w-full divide-y divide-gray-200 bg-white rounded-xl overflow-hidden">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Nombre</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Descripción</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Imagen</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginated.map((category) => (
-                <tr
-                  key={category.id_categoria}
-                  className="hover:bg-gray-100 transition-colors duration-200"
-                >
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{category.id_categoria}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700 font-semibold">{category.nombre}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{category.descripcion}</td>
-                  <td className="px-6 py-4">
-                    <img
-                      src={`https://apiricoton.cartavirtual.shop/${category.imagen_url}`}
-                      alt={category.nombre}
-                      className="h-16 w-auto object-cover border rounded-lg shadow-sm"
-                    />
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium">
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => handleEdit(category)}
-                        className="flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200 transition-colors shadow-sm"
-                        title="Editar"
-                      >
-                        <RiEditLine />
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(category.id_categoria)}
-                        className="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200 transition-colors shadow-sm"
-                        title="Eliminar"
-                      >
-                        <RiDeleteBin6Line />
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {paginated.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    No se encontraron resultados
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
+          {filteredCategories.length > 0 ? (
+            filteredCategories.map((category) => (
+              <motion.div
+                key={category.id_categoria}
+                className="bg-gray-50 rounded-xl flex flex-col overflow-hidden shadow-sm h-[340px]"
+                whileHover={{ scale: 1.02 }}
+              >
+                {/* Imagen */}
+                <div className="w-full h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={`https://apiricoton.cartavirtual.shop/${category.imagen_url}`}
+                    alt={category.nombre}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+
+                {/* Contenido */}
+                <div className="p-4 flex flex-col justify-between flex-1">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
+                      {category.nombre}
+                    </h3>
+                    <p className="text-sm text-gray-500 line-clamp-3 min-h-[48px]">
+                      {category.descripcion || "Sin descripción"}
+                    </p>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="mt-4 flex justify-end items-center pt-3 border-t border-gray-200 space-x-4">
+                    <motion.button
+                      onClick={() => handleEdit(category)}
+                      whileHover={{ scale: 1.2 }}
+                      className="text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                      <RiEditLine size={22} />
+                    </motion.button>
+
+                    <motion.button
+                      onClick={() => handleDelete(category.id_categoria)}
+                      whileHover={{ scale: 1.2 }}
+                      className="text-gray-600 hover:text-red-600 transition-colors"
+                    >
+                      <RiDeleteBin6Line size={22} />
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-gray-500 col-span-full text-center">
+              No se encontraron resultados
+            </p>
+          )}
         </div>
       )}
 
-      {/* Panel lateral de edición */}
+      {/* ✏️ Modal lateral de edición */}
       <AnimatePresence>
         {selectedCategory && (
           <>
@@ -200,13 +168,21 @@ const CategoryTable = () => {
               onClick={() => setSelectedCategory(null)}
             />
             <motion.div
-              className="fixed right-0 top-0 h-full w-1/4 bg-white shadow-2xl z-50 p-6 overflow-y-auto rounded-l-2xl"
+              className="fixed right-0 top-0 h-full w-full sm:w-2/5 bg-white shadow-2xl z-50 p-6 overflow-y-auto"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.4 }}
             >
-              <h3 className="text-xl font-bold mb-4">Editar Categoría</h3>
+              <div className="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 className="text-xl font-bold text-gray-800">Editar Categoría</h3>
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="text-gray-500 hover:text-red-500 text-2xl leading-none"
+                >
+                  ✕
+                </button>
+              </div>
               <CategoryForm
                 initialData={selectedCategory}
                 onCancel={() => setSelectedCategory(null)}
@@ -216,27 +192,6 @@ const CategoryTable = () => {
           </>
         )}
       </AnimatePresence>
-
-      {/* Paginación */}
-      <div className="flex justify-end mt-4 gap-2 items-center">
-        <button
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          disabled={currentPage === 1}
-        >
-          <HiArrowLeft /> Anterior
-        </button>
-        <span className="px-3 py-1 border rounded-lg bg-gray-50 text-gray-700">
-          {currentPage} / {totalPages || 1}
-        </span>
-        <button
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-          className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          disabled={currentPage === totalPages || totalPages === 0}
-        >
-          Siguiente <HiArrowRight />
-        </button>
-      </div>
     </div>
   );
 };

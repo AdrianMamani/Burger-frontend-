@@ -1,12 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  RiSearch2Line,
-  RiPhoneLine,
-  RiMapPin2Line,
-  RiArrowDownSLine,
-  RiArrowUpSLine,
-} from "react-icons/ri";
-import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
+import { RiSearch2Line } from "react-icons/ri";
 
 const Header = ({
   darkMode,
@@ -18,13 +11,8 @@ const Header = ({
   const [categories, setCategories] = useState([]);
   const [empresa, setEmpresa] = useState({
     nombre: "",
-    telefono: "",
-    ubicacion: "",
-    facebook_url: "",
-    instagram_url: "",
-    tiktok_url: "",
   });
-  const [showInfo, setShowInfo] = useState(false);
+
   const categoryRef = useRef(null);
   const [showDots, setShowDots] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -32,13 +20,8 @@ const Header = ({
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(window.scrollY > 20);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -57,11 +40,6 @@ const Header = ({
         if (data) {
           setEmpresa({
             nombre: data.nombre || "",
-            telefono: data.telefono || "",
-            ubicacion: data.ubicacion || "",
-            facebook_url: data.facebook_url || "",
-            instagram_url: data.instagram_url || "",
-            tiktok_url: data.tiktok_url || "",
           });
         }
       })
@@ -93,11 +71,12 @@ const Header = ({
 
   return (
     <header>
+      {/* Nombre centrado en móvil */}
       {!showOrder && (
         <div
-          className={`md:hidden fixed top-0 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center
-  ${darkMode ? "text-gray-300" : "text-white"}
-  rounded-b-full py-3 w-[95%] transition-colors duration-300 ease-in-out`}
+          className={`md:hidden absolute top-0 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center
+          ${darkMode ? "text-gray-300" : "text-white"}
+          rounded-b-full py-3 w-[95%] transition-colors duration-300 ease-in-out`}
           style={{
             background: scrolled
               ? "linear-gradient(90deg, #fd5d00ff, #e90404ff)"
@@ -107,21 +86,23 @@ const Header = ({
           }}
         >
           <h1
-            className=" text-center uppercase special-gothic-expanded-one-regular"
+            className="text-center uppercase special-gothic-expanded-one-regular"
             style={{ fontSize: "28px" }}
           >
-            {empresa.nombre || ""}
+            {empresa.nombre}
           </h1>
         </div>
       )}
 
       <div className="md:hidden h-16" />
 
+      {/* Bienvenida + buscador */}
       <div
         className={`flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4 
         md:bg-transparent md:rounded-none 
         ${darkMode ? "text-gray-300" : "text-black"}`}
       >
+        {/* SOLO PC: mensaje de bienvenida */}
         <div className="pt-2 hidden md:block">
           <h1
             className={`uppercase martian-mono ${
@@ -132,10 +113,11 @@ const Header = ({
               lineHeight: "32px",
             }}
           >
-            Bienvenidos a {empresa.nombre || ""}
+            Bienvenidos a {empresa.nombre}
           </h1>
         </div>
 
+        {/* Buscador */}
         <form className="px-2 md:px-0">
           <div className="w-full md:w-96 lg:w-[400px] relative">
             <RiSearch2Line
@@ -157,82 +139,7 @@ const Header = ({
         </form>
       </div>
 
-      <div className="mb-4 flex justify-start">
-        <button
-          onClick={() => setShowInfo(!showInfo)}
-          className={`flex items-center gap-2 text-sm font-medium transition ${
-            darkMode
-              ? "text-gray-300 hover:text-white"
-              : "text-gray-700 hover:text-black"
-          }`}
-        >
-          {showInfo ? (
-            <RiArrowUpSLine className="text-lg text-red-600" />
-          ) : (
-            <RiArrowDownSLine className="text-lg text-red-600" />
-          )}
-          {showInfo ? "Ocultar información" : "Ver información"}
-        </button>
-      </div>
-
-      {showInfo && (
-        <div
-          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 transition-all duration-300 ease-in-out ${
-            darkMode ? "text-gray-300" : "text-gray-700"
-          }`}
-        >
-          <div className="flex flex-col items-start text-sm">
-            <div className="flex items-center gap-2 mb-1">
-              <RiPhoneLine className="text-lg text-red-600 flex-shrink-0" />
-              <span>
-                <strong>Teléfono:</strong> {empresa.telefono || "No disponible"}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <RiMapPin2Line className="text-lg text-red-600 flex-shrink-0" />
-              <span>
-                <strong>Ubicación:</strong>{" "}
-                {empresa.ubicacion || "No registrada"}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex justify-center gap-6 mt-3 sm:hidden w-full">
-            {empresa.facebook_url && (
-              <a
-                href={empresa.facebook_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-red-600 hover:text-red-700 text-xl transition"
-              >
-                <FaFacebookF />
-              </a>
-            )}
-            {empresa.instagram_url && (
-              <a
-                href={empresa.instagram_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-red-600 hover:text-red-700 text-xl transition"
-              >
-                <FaInstagram />
-              </a>
-            )}
-            {empresa.tiktok_url && (
-              <a
-                href={empresa.tiktok_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-red-600 hover:text-red-700 text-xl transition"
-              >
-                <FaTiktok />
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
+      {/* Categorías */}
       <nav
         ref={categoryRef}
         className="flex overflow-x-auto overflow-y-hidden whitespace-nowrap items-center gap-4 border-b pb-2 scrollbar-hide touch-pan-x"
@@ -263,6 +170,7 @@ const Header = ({
         ))}
       </nav>
 
+      {/* Dots del scroll */}
       {showDots && (
         <div className="flex justify-center mt-2 mb-3 gap-2">
           {[...Array(3)].map((_, i) => (

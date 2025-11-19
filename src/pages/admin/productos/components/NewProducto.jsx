@@ -1,5 +1,6 @@
 // ProductModal.jsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import swal from "sweetalert";
 
 const ProductModal = ({ isOpen, onClose, categoryId, onSuccess }) => {
@@ -13,30 +14,29 @@ const ProductModal = ({ isOpen, onClose, categoryId, onSuccess }) => {
     previewUrl: null,
   });
 
-  const [categoryName, setCategoryName] = useState(""); // Nombre de la categoría
   const [loading, setLoading] = useState(false);
 
-  // --- Traer nombre de la categoría desde la API ---
+  // 🔹 Bloquear scroll sin romper el body
   useEffect(() => {
-    const fetchCategory = async () => {
-      if (!categoryId) return;
-      try {
-        const res = await fetch(`https://apiricoton.cartavirtual.shop/api/categoria/${categoryId}`);
-        const data = await res.json();
-        setCategoryName(data.nombre || `Categoría ${categoryId}`);
-      } catch (err) {
-        console.error(err);
-        setCategoryName(`Categoría ${categoryId}`);
-      }
-    };
-    fetchCategory();
-  }, [categoryId]);
+    if (isOpen) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+
+      return () => {
+        document.body.style.overflow = original || "auto";
+      };
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "imageFile" && files.length > 0) {
       const file = files[0];
-      setFormData({ ...formData, imageFile: file, previewUrl: URL.createObjectURL(file) });
+      setFormData({
+        ...formData,
+        imageFile: file,
+        previewUrl: URL.createObjectURL(file),
+      });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -58,155 +58,175 @@ const ProductModal = ({ isOpen, onClose, categoryId, onSuccess }) => {
       form.append("precio", formData.price);
       form.append("estado", 1);
       form.append("id_categoria", categoryId);
-
       if (formData.imageFile) form.append("imagen", formData.imageFile);
 
-      const response = await fetch("https://apiricoton.cartavirtual.shop/api/producto", {
-        method: "POST",
-        body: form,
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetch(
+        "https://apiricoton.cartavirtual.shop/api/producto",
+        {
+          method: "POST",
+          body: form,
+          headers: { Accept: "application/json" },
+        }
+      );
 
       const text = await response.text();
-      let data;
+      let data = null;
+
       try {
         data = JSON.parse(text);
       } catch {
-        swal("Error", "El servidor no devolvió JSON.", "error");
+        swal("Error", "El servidor no devolvió JSON válido.", "error");
         setLoading(false);
         return;
       }
 
       if (!response.ok) {
-        swal("Error", data.message || "Ocurrió un error al guardar el producto", "error");
+        swal("Error", data.message || "Error al registrar el producto", "error");
         setLoading(false);
         return;
       }
 
       swal("Éxito", "Producto creado correctamente", "success");
-      setFormData({ name: "", description: "", price: "", imageFile: null, previewUrl: null });
+
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        imageFile: null,
+        previewUrl: null,
+      });
+
       if (onSuccess) onSuccess(data);
       onClose();
-    } catch (error) {
-      console.error(error);
-      swal("Error de conexión", error.message, "error");
+    } catch (err) {
+      swal("Error de conexión", err.message, "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end">
+    <div className="fixed inset-0 z-50 flex">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-md animate-fadeIn"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
-      <div className="relative w-1/3 h-screen bg-white shadow-2xl p-6 animate-slideIn overflow-hidden">
-        <div className="flex justify-between items-center mb-4">
+      <div className="relative ml-auto w-full sm:w-2/5 h-full bg-white shadow-2xl p-6 animate-slideIn flex flex-col">
+
+        <div className="flex justify-between items-center mb-4 border-b pb-3">
           <h2 className="text-xl font-semibold text-gray-800">Nuevo Producto</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-lg">✕</button>
+
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-red-500 transition"
+            title="Cerrar"
+          >
+            <X size={26} strokeWidth={2.5} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <div className="space-y-4">
-            <label className="block">
-              <span className="text-gray-700">Nombre</span>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
-                required
-              />
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto space-y-4 pb-32"
+        >
+          <label className="block">
+            <span className="text-gray-700">Nombre</span>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
+              required
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-gray-700">Descripción</span>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="mt-1 w-full border rounded-lg p-3 focus:ring focus:ring-blue-300"
+              rows={5}
+              required
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-gray-700">Precio</span>
+            <input
+              type="number"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
+              step="0.01"
+              required
+            />
+          </label>
+
+          <div>
+            <span className="text-gray-700">Imagen</span>
+
+            <label
+              htmlFor="imageFile"
+              className="block mt-2 bg-blue-600 text-white text-sm px-4 py-2 rounded-lg shadow cursor-pointer hover:bg-blue-700 w-fit"
+            >
+              Seleccionar archivo
             </label>
 
-            <label className="block">
-              <span className="text-gray-700">Descripción</span>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
-                rows={2}
-                required
-              />
-            </label>
+            <input
+              id="imageFile"
+              type="file"
+              name="imageFile"
+              accept="image/*"
+              className="hidden"
+              onChange={handleChange}
+            />
 
-            <label className="block">
-              <span className="text-gray-700">Precio</span>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
-                step="0.01"
-                required
+            {formData.previewUrl && (
+              <img
+                src={formData.previewUrl}
+                className="mt-4 w-full h-[260px] object-contain rounded-xl border shadow-sm bg-white"
+                alt="Preview"
               />
-            </label>
-
-            <label className="block">
-              <span className="text-gray-700">Imagen</span>
-              <input
-                type="file"
-                name="imageFile"
-                accept="image/*"
-                onChange={handleChange}
-                className="mt-1 w-full"
-              />
-              {formData.previewUrl && (
-                <img
-                  src={formData.previewUrl}
-                  alt="Preview"
-                  className="mt-3 w-32 h-32 object-cover rounded-lg border"
-                />
-              )}
-            </label>
-
-            {/* Mostrar nombre de la categoría */}
-            <label className="block">
-              <span className="text-gray-700">Categoría</span>
-              <input
-                type="text"
-                value={categoryName || categoryId}
-                readOnly
-                className="mt-1 w-full border rounded-lg p-2 bg-gray-100 cursor-not-allowed"
-              />
-            </label>
-
-            <input type="hidden" name="id_categoria" value={categoryId} />
+            )}
           </div>
 
-          <div className="border-t pt-4 mt-4 flex justify-end space-x-3 bg-white sticky bottom-0">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
-              disabled={loading}
-            >
-              {loading ? "Guardando..." : "Guardar"}
-            </button>
-          </div>
+          <input type="hidden" name="id_categoria" value={categoryId} />
         </form>
+
+        <div className="absolute bottom-0 left-0 w-full bg-white border-t p-4 flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+            disabled={loading}
+          >
+            Cancelar
+          </button>
+
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
+            disabled={loading}
+          >
+            {loading ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
       </div>
 
-      <style>
-        {`
-          @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-          .animate-slideIn { animation: slideIn 0.3s forwards; }
-          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-          .animate-fadeIn { animation: fadeIn 0.3s forwards; }
-        `}
-      </style>
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+        .animate-slideIn {
+          animation: slideIn 0.4s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import swal from "sweetalert";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
   const isEditMode = !!initialData;
@@ -17,9 +18,14 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
 
   const [categorias, setCategorias] = useState([]);
   const [productos, setProductos] = useState([]);
+  const [allProductos, setAllProductos] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Cargar datos iniciales
+  // Estado de verificación automática
+  const [verificando, setVerificando] = useState(false);
+  const [codigoValido, setCodigoValido] = useState(null);
+
+  // --- Cargar datos iniciales ---
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -34,10 +40,11 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
         fecha_fin: initialData.fecha_fin ? initialData.fecha_fin.split("T")[0] : "",
         cantidad_total: initialData.cantidad_total || "",
       });
+      setCodigoValido(true);
     }
   }, [initialData]);
 
-  // Cargar categorías y productos
+  // --- Cargar categorías y productos ---
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -51,6 +58,7 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
 
         setCategorias(catData || []);
         setProductos(prodData || []);
+        setAllProductos(prodData || []);
       } catch (error) {
         console.error("Error cargando datos:", error);
         swal("Error", "No se pudieron cargar categorías o productos", "error");
@@ -59,23 +67,80 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
     fetchData();
   }, []);
 
+  // --- Verificar código automáticamente con debounce ---
+  useEffect(() => {
+    if (!formData.codigo.trim()) {
+      setCodigoValido(null);
+      return;
+    }
+
+    const delay = setTimeout(async () => {
+      setVerificando(true);
+      try {
+        const res = await fetch("https://apiricoton.cartavirtual.shop/api/cupon");
+        const data = await res.json();
+
+        const existe = data.some(
+          (c) =>
+            c.codigo?.toLowerCase() === formData.codigo.toLowerCase() &&
+            (!isEditMode || c.id_cupon !== initialData?.id_cupon)
+        );
+
+        setCodigoValido(!existe);
+      } catch (error) {
+        console.error("Error verificando código:", error);
+        setCodigoValido(null);
+      } finally {
+        setVerificando(false);
+      }
+    }, 600); // debounce de 0.6 segundos
+
+    return () => clearTimeout(delay);
+  }, [formData.codigo]);
+
+  // --- Manejar cambios ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+
+    if (name === "id_categoria") {
+      if (value === "") {
+        setProductos(allProductos);
+      } else {
+        const filtrados = allProductos.filter(
+          (p) => String(p.id_categoria) === String(value)
+        );
+        setProductos(filtrados);
+      }
+      setFormData({ ...formData, [name]: value, id_producto: "" });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
-  // Cambiar tipo (porcentaje/monto)
+  // --- Cambiar tipo ---
   const toggleTipo = () => {
     setFormData({
       ...formData,
       tipo: formData.tipo === "porcentaje" ? "monto" : "porcentaje",
+      valor: "",
     });
   };
 
+  // --- Enviar formulario ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
+    if (formData.tipo === "porcentaje" && Number(formData.valor) > 100) {
+      swal("Error", "El valor porcentual no puede ser mayor a 100", "error");
+      return;
+    }
+
+    if (!isEditMode && codigoValido === false) {
+      swal("Error", "Cupón ya existente", "error");
+      return;
+    }
+
+    setLoading(true);
     try {
       const payload = {
         codigo: formData.codigo,
@@ -113,6 +178,7 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
       );
 
       if (onSuccess) onSuccess(data);
+      if (onCancel) onCancel();
     } catch (error) {
       console.error("Error en la solicitud:", error);
       swal("Error", "No se pudo conectar con el servidor", "error");
@@ -124,20 +190,43 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-        {/* Código */}
-        <label className="block">
+        {/* Código con verificación automática */}
+        <div className="block">
           <span className="text-gray-700 font-semibold">Código</span>
-          <input
-            type="text"
-            name="codigo"
-            value={formData.codigo}
-            onChange={handleChange}
-            className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
-            required
-          />
-        </label>
+          <div className="flex items-center space-x-2 mt-1">
+            <input
+              type="text"
+              name="codigo"
+              value={formData.codigo}
+              onChange={handleChange}
+              className={`w-full border rounded-lg p-2 focus:ring focus:ring-blue-300 ${
+                codigoValido === false
+                  ? "border-red-500"
+                  : codigoValido === true
+                  ? "border-green-500"
+                  : ""
+              }`}
+              required
+            />
+            {verificando ? (
+              <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+            ) : codigoValido === true ? (
+              <CheckCircle className="w-5 h-5 text-green-500" />
+            ) : codigoValido === false ? (
+              <XCircle className="w-5 h-5 text-red-500" />
+            ) : null}
+          </div>
 
-        {/* Tipo (palanca) */}
+          {/* Texto auxiliar */}
+          {codigoValido === true && (
+            <p className="text-green-600 text-sm mt-1">Código disponible</p>
+          )}
+          {codigoValido === false && (
+            <p className="text-red-600 text-sm mt-1">El código ya existe</p>
+          )}
+        </div>
+
+        {/* Tipo */}
         <div className="flex items-center justify-between mt-2">
           <span className="text-gray-700 font-semibold">
             Tipo: {formData.tipo === "porcentaje" ? "Porcentaje" : "Monto"}
@@ -159,13 +248,16 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
 
         {/* Valor */}
         <label className="block">
-          <span className="text-gray-700 font-semibold">Valor</span>
+          <span className="text-gray-700 font-semibold">
+            Valor {formData.tipo === "porcentaje" ? "(%)" : "(S/)"}
+          </span>
           <input
             type="number"
             step="0.01"
             name="valor"
             value={formData.valor}
             onChange={handleChange}
+            max={formData.tipo === "porcentaje" ? "100" : undefined}
             className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
             required
           />

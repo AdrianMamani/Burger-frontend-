@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { RiEditLine, RiDeleteBin6Line } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
 import ProductoForm from "./ProductoForm";
 import swal from "sweetalert";
-import { HiArrowLeft, HiArrowRight } from "react-icons/hi";
 import { useParams } from "react-router-dom";
 
 const API_URL = "https://apiricoton.cartavirtual.shop/api/producto";
 
-const ProductoTable = () => {
+const ProductoTable = ({ search, refreshTrigger }) => {
   const { id_categoria } = useParams();
   const categoryId = id_categoria ? Number(id_categoria) : null;
 
@@ -16,40 +15,44 @@ const ProductoTable = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    const fetchProductos = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        setProductos(data);
-        setFilteredProducts(categoryId ? data.filter(p => p.id_categoria === categoryId) : data);
-        setCurrentPage(1);
-      } catch (error) {
-        console.error("Error al obtener productos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProductos();
-  }, [categoryId]);
+  // 🟦 Obtener productos
+  const fetchProductos = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const list = categoryId
+        ? data.filter((p) => p.id_categoria === categoryId)
+        : data;
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      let list = categoryId ? productos.filter(p => p.id_categoria === categoryId) : productos;
-      if (search.trim() !== "") {
-        list = list.filter(p => p.nombre.toLowerCase().includes(search.toLowerCase()));
-      }
+      setProductos(list);
       setFilteredProducts(list);
-      setCurrentPage(1);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [search, productos, categoryId]);
+    } catch (error) {
+      console.error("Error al obtener productos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // 🔄 Cargar cuando inicia o cuando hay refresh
+  useEffect(() => {
+    fetchProductos();
+  }, [refreshTrigger, categoryId]);
+
+  // 🔍 Filtro de búsqueda
+  useEffect(() => {
+    if (!search.trim()) {
+      setFilteredProducts(productos);
+    } else {
+      const filtered = productos.filter((p) =>
+        p.nombre.toLowerCase().includes(search.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  }, [search, productos]);
+
+  // ✏️ Editar
   const handleEdit = (product) => {
     setSelectedProduct({
       id_producto: product.id_producto,
@@ -60,6 +63,7 @@ const ProductoTable = () => {
     });
   };
 
+  // 🗑️ Eliminar
   const handleDelete = async (id) => {
     const confirm = await swal({
       title: "¿Eliminar producto?",
@@ -68,138 +72,109 @@ const ProductoTable = () => {
       buttons: ["Cancelar", "Eliminar"],
       dangerMode: true,
     });
+
     if (!confirm) return;
 
     try {
       const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
       if (res.ok) {
         swal("Eliminado!", "El producto fue eliminado.", "success");
-        setProductos(prev => prev.filter(p => p.id_producto !== id));
-        setFilteredProducts(prev => prev.filter(p => p.id_producto !== id));
+        fetchProductos();
       } else {
         swal("Error", "No se pudo eliminar el producto.", "error");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error al eliminar producto:", error);
       swal("Error", "Error de conexión al eliminar.", "error");
     }
   };
 
+  // Guardar → refrescar tabla
   const handleSave = () => {
-    const fetchUpdated = async () => {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      setProductos(data);
-      setFilteredProducts(categoryId ? data.filter(p => p.id_categoria === categoryId) : data);
-    };
-    fetchUpdated();
+    fetchProductos();
     setSelectedProduct(null);
   };
 
-  const totalPages = Math.ceil(filteredProducts.length / pageSize);
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredProducts.slice(start, start + pageSize);
-  }, [filteredProducts, currentPage, pageSize]);
+  // Bloquea scroll si modal está abierto
+  useEffect(() => {
+    document.body.style.overflow = selectedProduct ? "hidden" : "auto";
+    return () => (document.body.style.overflow = "auto");
+  }, [selectedProduct]);
 
   return (
-    <div className="relative bg-white p-6 rounded-2xl">
-      {/* Controles */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-        <div className="flex items-center gap-3">
-          <label className="text-gray-700 font-semibold">Mostrar:</label>
-          <select
-            value={pageSize}
-            onChange={e => setPageSize(Number(e.target.value))}
-            className="border border-gray-300 rounded-lg px-3 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value={10}>10</option>
-            <option value={15}>15</option>
-            <option value={30}>30</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Buscar por nombre..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 w-full sm:w-64 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-      </div>
-
-      {/* Tabla */}
+    <div className="relative">
       {loading ? (
         <p className="text-gray-500">Cargando productos...</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl shadow-md">
-          <table className="min-w-full divide-y divide-gray-200 bg-white rounded-xl overflow-hidden">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Nombre</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Descripción</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Precio</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Imagen</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginated.map((product, idx) => (
-                <tr key={product.id_producto} className="hover:bg-gray-100 transition-colors duration-200">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {(currentPage - 1) * pageSize + idx + 1}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 font-semibold">{product.nombre}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{product.descripcion}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700 font-medium">
-                    {new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(product.precio)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <img
-                      src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
-                      alt={product.nombre}
-                      className="h-16 w-auto object-cover border rounded-lg shadow-sm"
-                    />
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium">
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200 transition-colors shadow-sm"
-                        title="Editar"
-                      >
-                        <RiEditLine /> Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id_producto)}
-                        className="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200 transition-colors shadow-sm"
-                        title="Eliminar"
-                      >
-                        <RiDeleteBin6Line /> Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {paginated.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                    No se encontraron productos
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        // ⭐⭐⭐⭐ CUATRO TARJETAS POR FILA ⭐⭐⭐⭐
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.length > 0 ? (
+            filteredProducts.map((product) => (
+              <motion.div
+                key={product.id_producto}
+                className="bg-white rounded-xl flex flex-col overflow-hidden shadow-md h-[380px] border"
+                whileHover={{ scale: 1.02 }}
+              >
+                {/* Imagen tamaño fijo */}
+                <div className="w-full h-40 bg-gray-100 overflow-hidden">
+                  <img
+                    src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
+                    alt={product.nombre}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Contenido */}
+                <div className="p-4 flex flex-col justify-between flex-1">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
+                      {product.nombre}
+                    </h3>
+
+                    {/* ⭐ Descripción corta con ... */}
+                    <p className="text-sm text-gray-500 line-clamp-2 min-h-[36px]">
+                      {product.descripcion || "Sin descripción"}
+                    </p>
+
+                    <p className="text-md font-bold text-green-700 mt-2">
+                      S/ {product.precio}
+                    </p>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="mt-3 flex justify-end items-center pt-2 border-t border-gray-200 space-x-4">
+                    <motion.button
+                      onClick={() => handleEdit(product)}
+                      whileHover={{ scale: 1.2 }}
+                      className="text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                      <RiEditLine size={22} />
+                    </motion.button>
+
+                    <motion.button
+                      onClick={() => handleDelete(product.id_producto)}
+                      whileHover={{ scale: 1.2 }}
+                      className="text-gray-600 hover:text-red-600 transition-colors"
+                    >
+                      <RiDeleteBin6Line size={22} />
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-gray-500 col-span-full text-center">
+              No se encontraron productos
+            </p>
+          )}
         </div>
       )}
 
-      {/* Panel lateral de edición */}
+      {/* Modal lateral de edición */}
       <AnimatePresence>
         {selectedProduct && (
           <>
+            {/* Fondo */}
             <motion.div
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
               initial={{ opacity: 0 }}
@@ -207,17 +182,31 @@ const ProductoTable = () => {
               exit={{ opacity: 0 }}
               onClick={() => setSelectedProduct(null)}
             />
+
+            {/* Panel */}
             <motion.div
-              className="fixed right-0 top-0 h-full w-1/4 bg-white shadow-2xl z-50 p-6 overflow-y-auto rounded-l-2xl"
+              className="fixed right-0 top-0 h-full w-full sm:w-2/5 bg-white shadow-2xl z-50 p-6 overflow-y-auto"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.4 }}
             >
-              <h3 className="text-xl font-bold mb-4">Editar Producto</h3>
+              <div className="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 className="text-xl font-bold text-gray-800">
+                  Editar Producto
+                </h3>
+
+                <button
+                  onClick={() => setSelectedProduct(null)}
+                  className="text-gray-500 hover:text-red-500 text-2xl leading-none"
+                >
+                  ✕
+                </button>
+              </div>
+
               <ProductoForm
                 initialData={selectedProduct}
-                categoryId={categoryId} // <-- importante
+                categoryId={categoryId}
                 onCancel={() => setSelectedProduct(null)}
                 onSuccess={handleSave}
               />
@@ -225,27 +214,6 @@ const ProductoTable = () => {
           </>
         )}
       </AnimatePresence>
-
-      {/* Paginación */}
-      <div className="flex justify-end mt-4 gap-2 items-center">
-        <button
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          disabled={currentPage === 1}
-        >
-          <HiArrowLeft /> Anterior
-        </button>
-        <span className="px-3 py-1 border rounded-lg bg-gray-50 text-gray-700">
-          {currentPage} / {totalPages || 1}
-        </span>
-        <button
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-          className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          disabled={currentPage === totalPages || totalPages === 0}
-        >
-          Siguiente <HiArrowRight />
-        </button>
-      </div>
     </div>
   );
 };

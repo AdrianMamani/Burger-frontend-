@@ -1,6 +1,10 @@
 @import "react-quill/dist/quill.snow.css";
 @import url('https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Erica+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Notable&display=swap');
+
+
 
 @tailwind base;
 @tailwind components;
@@ -16,5 +20,17 @@
   font-family: "Martian Mono", monospace;
   font-optical-sizing: auto;
   font-weight: 500; 
+  font-style: normal;
+}
+
+.erica-one-regular {
+  font-family: "Erica One", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.notable-regular {
+  font-family: "Notable", sans-serif;
+  font-weight: 400;
   font-style: normal;
 }

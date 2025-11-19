@@ -174,9 +174,12 @@ const CuponTable = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginated.map((cupon) => (
+              {paginated.map((cupon, pagIndex) => (
                 <tr key={cupon.id_cupon} className="hover:bg-gray-100 transition-colors">
-                  <td className="px-4 py-3 text-sm text-gray-800 font-medium">{cupon.id_cupon}</td>
+                  {/* ID secuencial considerando la paginación */}
+                  <td className="px-4 py-3 text-sm text-gray-800 font-medium">
+                    {(currentPage - 1) * pageSize + pagIndex + 1}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-700 font-semibold">{cupon.codigo}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 capitalize">{cupon.tipo}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">
