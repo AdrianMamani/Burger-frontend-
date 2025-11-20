@@ -67,7 +67,7 @@ const Sidebar = ({ showMenu, darkMode, empresa }) => {
           })}
         </ul>
       </div>
-      {/* Redes Sociales1 */}
+      {/* Redes Sociales */}
       {empresa && (
         <div className="mb-6 flex flex-col items-center gap-6">
           {empresa.facebook_url && (
