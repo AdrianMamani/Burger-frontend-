@@ -10,6 +10,8 @@ import Header from "../../components/shared/Header";
 import Card from "../../components/shared/Card";
 import DiscountToast from "../../components/cupon_web";
 import { motion, AnimatePresence } from "framer-motion";
+import { RiTimeLine } from "react-icons/ri";
+
 
 // 🔹 Ítem del Navbar
 const NavItem = ({ icon: Icon, active, onClick }) => (
@@ -173,6 +175,7 @@ const Home = ({ addToCart, cart, setCart }) => {
     fetch("https://apiricoton.cartavirtual.shop/api/empresa")
       .then((res) => res.json())
       .then((data) => {
+        setEmpresa(data);
         if (data.nombre) setEmpresaNombre(data.nombre);
         if (data.horario) setHorario(data.horario);
         if (data.video_pres_url) setVideoUrl(data.video_pres_url);
@@ -226,7 +229,7 @@ const Home = ({ addToCart, cart, setCart }) => {
           darkMode ? "bg-[#262837] text-gray-300" : "bg-gray-100 text-gray-900"
         }`}
       >
-        <Sidebar showMenu={showMenu} darkMode={darkMode} />
+        <Sidebar showMenu={showMenu} darkMode={darkMode} empresa={empresa} />
         <Car
           showOrder={showOrder}
           setShowOrder={setShowOrder}

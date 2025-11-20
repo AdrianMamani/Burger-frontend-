@@ -4,7 +4,7 @@ import { RiHome6Line } from "react-icons/ri";
 import { BsShieldCheck } from "react-icons/bs";
 import { FaBook } from "react-icons/fa";
 
-const Sidebar = ({ showMenu, darkMode }) => {
+const Sidebar = ({ showMenu, darkMode, empresa }) => {
   const location = useLocation();
   const [active, setActive] = useState("/home");
 
