@@ -328,7 +328,7 @@ const Home = ({ addToCart, cart, setCart }) => {
             />
           </div>
         </main>
-        {/* FOOTER1 */}
+        {/* FOOTER */}
           <footer className="py-6 text-center text-sm mt-10">
             <p>
               © {new Date().getFullYear()}{" "}
