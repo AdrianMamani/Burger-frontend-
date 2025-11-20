@@ -67,6 +67,43 @@ const Sidebar = ({ showMenu, darkMode }) => {
           })}
         </ul>
       </div>
+      {/* Redes Sociales */}
+      {empresa && (
+        <div className="mb-6 flex flex-col items-center gap-6">
+          {empresa.facebook_url && (
+            <a
+              href={empresa.facebook_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white text-3xl hover:text-[#F0320C] transition-colors"
+            >
+              <i className="ri-facebook-fill"></i>
+            </a>
+          )}
+
+          {empresa.instagram_url && (
+            <a
+              href={empresa.instagram_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white text-3xl hover:text-[#F0320C] transition-colors"
+            >
+              <i className="ri-instagram-line"></i>
+            </a>
+          )}
+
+          {empresa.tiktok_url && (
+            <a
+              href={empresa.tiktok_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white text-3xl hover:text-[#F0320C] transition-colors"
+            >
+              <i className="ri-tiktok-fill"></i>
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 };

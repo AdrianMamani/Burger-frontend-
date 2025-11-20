@@ -122,6 +122,7 @@ const Home = ({ addToCart, cart, setCart }) => {
   const [logoUrl, setLogoUrl] = useState(null);
   const [horario, setHorario] = useState("");
   const [videoUrl, setVideoUrl] = useState(null);
+  const [empresa, setEmpresa] = useState(null);
   const [empresaNombre, setEmpresaNombre] = useState("");
   const [facebookUrl, setFacebookUrl] = useState("");
   const [tiktokUrl, setTiktokUrl] = useState("");
@@ -289,6 +290,30 @@ const Home = ({ addToCart, cart, setCart }) => {
                       ></motion.iframe>
                     )}
                   </AnimatePresence>
+                    {/* Contenedor bajo banner */}
+                    <div
+                      className="absolute left-30px right-0 mx-auto rounded-2xl shadow-lg 
+                                flex flex-col items-center justify-center 
+                                px-6 py-4 gap-1"
+                      style={{
+                        backgroundColor: "#ffffff",
+                        bottom: "-50px",
+                        width: "fit-content",
+                        maxWidth: "90%",
+                      }}
+                    >
+                      {/* Horario visible en todas las pantallas */}
+                      <div className="flex flex-col text-black justify-center items-center">
+                        <div className="flex items-center gap-2 text-base md:text-lg font-semibold justify-center">
+                          <RiTimeLine className="text-xl md:text-2xl text-[#F0320C]" />
+                          <span>Hora de atención</span>
+                        </div>
+
+                        <span className="text-sm md:text-base font-medium text-center">
+                          {horario || "Lunes a Domingo: 10:00 a.m. - 11:00 p.m."}
+                        </span>
+                      </div>
+                    </div>
                 </div>
               )}
 
@@ -300,6 +325,31 @@ const Home = ({ addToCart, cart, setCart }) => {
             />
           </div>
         </main>
+        {/* FOOTER */}
+          <footer className="py-6 text-center text-sm mt-10">
+            <p>
+              © {new Date().getFullYear()}{" "}
+              {empresa ? empresa.nombre : "Cargando..."}. Todos los derechos
+              reservados.
+            </p>
+            {empresa && (
+              <p className="mt-2 text-gray-600 dark:text-gray-400 text-xs max-w-xl mx-auto">
+                {empresa.ubicacion}
+              </p>
+            )}
+            <div className="flex justify-center gap-4 mt-2">
+              <a
+                href="/terminos"
+                className="hover:text-amber-500 transition-colors"
+              >
+                Términos de Servicio
+              </a>
+              <span>•</span>
+              <a href="/politicas" className="text-amber-500 font-medium">
+                Política de Privacidad
+              </a>
+            </div>
+          </footer>
       </div>
     </>
   );
