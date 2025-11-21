@@ -11,8 +11,29 @@ const ProductPage = () => {
   const [empresaNombre, setEmpresaNombre] = useState("Bembos");
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshKey, setRefreshKey] = useState(0); // 🔄 recargar tabla al crear/editar
+  const [categoriaNombre, setCategoriaNombre] = useState("");
+
 
   const { id_categoria } = useParams(); // obtiene la categoría actual desde la URL
+
+  useEffect(() => {
+  const fetchCategoriaNombre = async () => {
+    try {
+      const res = await fetch("https://apiricoton.cartavirtual.shop/api/categorias");
+      const data = await res.json();
+
+      const categoria = data.find(
+        (c) => c.id_categoria == id_categoria
+      );
+
+      if (categoria) setCategoriaNombre(categoria.nombre);
+    } catch (error) {
+      console.error("Error al obtener categoría:", error);
+    }
+  };
+
+  fetchCategoriaNombre();
+}, [id_categoria]);
 
   // 🟦 Obtener nombre de la empresa
   useEffect(() => {
@@ -65,7 +86,7 @@ const ProductPage = () => {
         <main className="flex-grow p-8 overflow-y-auto relative">
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-6">
-              Productos
+              {categoriaNombre || "Productos"}
             </h1>
 
             {/* 🔍 Barra de búsqueda + botón */}
@@ -107,12 +128,12 @@ const ProductPage = () => {
 
           {/* Modal lateral */}
           <NewProducto
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            initialData={editingProduct}
-            categoryId={id_categoria}
-            onSubmit={handleSaveProduct} // refresca la tabla automáticamente
-          />
+  isOpen={isModalOpen}
+  onClose={() => setIsModalOpen(false)}
+  initialData={editingProduct}
+  categoryId={id_categoria}
+  onSuccess={handleSaveProduct}  // 🚀 ESTA ES LA CLAVE
+/>
         </main>
       </div>
     </div>

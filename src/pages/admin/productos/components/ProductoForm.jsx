@@ -111,7 +111,7 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
         });
       }
 
-      if (onSuccess) onSuccess(data);
+      if (onSuccess) onSuccess({ ...data, isCreate: !isEditMode });
     } catch (error) {
       swal("Error de conexión", error.message, "error");
     } finally {

@@ -1,9 +1,8 @@
-// 🔥 CÓDIGO COMPLETO DE Card.jsx CON DESCUENTO EN addToCart
+// 🔥 CÓDIGO COMPLETO DE Card.jsx CON BANNER SOLO EN CELULAR
 
 import React, { useState, useEffect } from "react";
 import { FaShoppingCart } from "react-icons/fa";
 import { IoIosArrowBack } from "react-icons/io";
-import { RiCoupon2Line } from "react-icons/ri";
 import { TbDiscount2 } from "react-icons/tb";
 
 const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
@@ -79,93 +78,46 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
   };
 
   return (
-    <div className="w-full mt-6 md:mt-8">
+    <div className="w-full md:mt-12">
       {error && (
         <div className="bg-red-100 text-red-700 p-3 rounded-md mb-3 text-center font-semibold">
           {error}
         </div>
       )}
 
-      {/* BANNER MÓVIL */}
-      {categoryInfo && (
-        <div className="block md:hidden w-full mb-4 px-3">
-          <div
-            className={`flex items-center p-4 w-full rounded-2xl transition-all duration-300
-                text-white shadow-lg`}
-            style={{
-              background: `linear-gradient(135deg, ${
-                categoryInfo.dominantColor || "#F0320C"
-              } 0%, ${
-                categoryInfo.dominantColor
-                  ? categoryInfo.dominantColor + "aa"
-                  : "#ff5a36"
-              } 100%)`,
-            }}
-          >
-            <div className="w-1/3 pr-3">
-              <img
-                src={`https://apiricoton.cartavirtual.shop/${categoryInfo.imagen_url}`}
-                alt={categoryInfo.nombre}
-                className="w-full h-auto object-contain rounded-lg"
-                onError={(e) =>
-                  (e.target.src =
-                    "https://via.placeholder.com/150?text=Sin+Imagen")
-                }
-              />
-            </div>
-            <div className="w-2/3 pl-2">
-              <h4 className="font-extrabold text-lg">{categoryInfo.nombre}</h4>
-              {categoryInfo.descripcion && (
-                <p className="text-xs mt-1">{categoryInfo.descripcion}</p>
-              )}
-            </div>
-          </div>
+      {/* 🔥 BANNER SOLO EN CELULAR */}
+      {categoryInfo?.imagen_url && (
+        <div className="w-full mb-6 block md:hidden">
+          <img
+            src={`https://apiricoton.cartavirtual.shop/${categoryInfo.imagen_url}`}
+            className="
+              w-full 
+              h-48 
+              object-cover 
+              rounded-xl
+            "
+            alt={categoryInfo.nombre}
+          />
         </div>
       )}
 
-      {/* GRID */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 px-2 sm:px-3">
-        {categoryInfo && (
-          <div className="hidden md:block w-full">
-            <div
-              className={`flex flex-col justify-between p-3 h-full rounded-xl border transition-all duration-300
-                min-h-[320px] text-white shadow-md`}
-              style={{
-                background: `linear-gradient(135deg, ${
-                  categoryInfo.dominantColor || "#F0320C"
-                } 0%, ${
-                  categoryInfo.dominantColor
-                    ? categoryInfo.dominantColor + "aa"
-                    : "#ff5a36"
-                } 100%)`,
-              }}
-            >
-              <div className="flex justify-center mb-4">
-                <img
-                  src={`https://apiricoton.cartavirtual.shop/${categoryInfo.imagen_url}`}
-                  alt={categoryInfo.nombre}
-                  className="w-36 h-36 md:w-44 md:h-44 object-contain rounded-xl"
-                  onError={(e) =>
-                    (e.target.src =
-                      "https://via.placeholder.com/150?text=Sin+Imagen")
-                  }
-                />
-              </div>
-              <div className="flex flex-col text-center w-full mt-3 flex-grow">
-                <h4 className="font-extrabold text-xl md:text-2xl">
-                  {categoryInfo.nombre}
-                </h4>
-                {categoryInfo.descripcion && (
-                  <p className="text-sm md:text-base mt-1">
-                    {categoryInfo.descripcion}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+      {/* 🔥 SOLO NOMBRE + DESCRIPCIÓN */}
+      {categoryInfo && (
+        <div className="px-4 mb-6">
+          <h2 className="text-2xl md:text-4xl font-extrabold">
+            {categoryInfo.nombre}
+          </h2>
 
-        {/* TARJETAS */}
+          {categoryInfo.descripcion && (
+            <p className="text-base md:text-lg mt-2 opacity-80">
+              {categoryInfo.descripcion}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* 🔥 PRODUCTOS */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 px-2 sm:px-3">
         {products.map((product) => {
           const cup = obtenerDescuento(product);
           const nuevoPrecio = calcularPrecioConDescuento(product.precio, cup);
@@ -204,13 +156,10 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
                     <p className="text-xs line-through opacity-70">
                       S/ {product.precio}
                     </p>
-
                     <div className="flex items-center gap-1">
                       <p className="text-red-500 font-bold">S/ {nuevoPrecio}</p>
                       <span className="text-[10px] text-red-600 font-semibold">
-                        ({cup.tipo === "porcentaje"
-                          ? `${cup.valor}%`
-                          : `-S/ ${cup.valor}`})
+                        ({cup.tipo === "porcentaje" ? `${cup.valor}%` : `-S/ ${cup.valor}`})
                       </span>
                     </div>
                   </div>
@@ -219,7 +168,6 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
                 )}
               </div>
 
-              {/* 🔥 BOTÓN CORREGIDO */}
               <button
                 className="mt-3 w-full py-2 rounded-lg flex justify-center items-center bg-[#F0320C] hover:bg-[#d42c0b] text-white"
                 onClick={(e) => {
@@ -250,7 +198,7 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
         })}
       </div>
 
-      {/* MODAL */}
+      {/* 🔥 MODAL */}
       {selectedProduct && (
         <>
           <div
@@ -260,9 +208,7 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
 
           <div
             className={`fixed right-0 top-0 h-full z-50 overflow-y-auto flex flex-col justify-between ${
-              darkMode
-                ? "bg-[#1F1D2B] text-gray-300"
-                : "bg-white text-gray-900"
+              darkMode ? "bg-[#1F1D2B] text-gray-300" : "bg-white text-gray-900"
             } w-full max-w-[420px]`}
           >
             <div className="flex items-center px-5 py-4 lg:hidden">
@@ -275,13 +221,17 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
             </div>
 
             <div className="flex flex-col items-center px-6">
-              <img
-                src={`https://apiricoton.cartavirtual.shop/${selectedProduct.imagen_url}`}
-                className="w-80 h-80 rounded-2xl mt-4"
-              />
+              <div className="w-full flex justify-center items-center mt-4">
+                <img
+                  src={`https://apiricoton.cartavirtual.shop/${selectedProduct.imagen_url}`}
+                  className="max-w-full max-h-[420px] object-contain rounded-2xl"
+                />
+              </div>
 
               <div className="w-full mt-5">
-                <h4 className="text-2xl font-bold">{selectedProduct.nombre}</h4>
+                <h4 className="text-2xl font-bold">
+                  {selectedProduct.nombre}
+                </h4>
 
                 {(() => {
                   const cup = obtenerDescuento(selectedProduct);
@@ -320,7 +270,6 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
               </div>
             </div>
 
-            {/* 🔥 BOTÓN CORREGIDO DEL MODAL */}
             <div className="p-5 flex gap-4">
               <button
                 className="w-full py-3 rounded-2xl font-medium bg-black text-white"

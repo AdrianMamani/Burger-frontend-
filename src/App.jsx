@@ -6,6 +6,9 @@ import Terminos from "./pages/home/terminos";
 import Politica from "./pages/home/politica";
 import Login from "./pages/login/login";
 
+// celular
+import Profile_empresa from "./pages/home/profile_empresa";
+
 // Panel administrador
 import Dashboard from "./pages/admin/dashboard/pages/dashboard";
 import CategoriaAdmin from "./pages/admin/categorias/pages/categoria";
@@ -79,6 +82,7 @@ function App() {
         />
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/politicas" element={<Politica />} />
+        <Route path="/profile_empresa" element={<Profile_empresa />} />
 
         {/* Login restringido solo a PC/Laptop */}
         <Route

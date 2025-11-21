@@ -202,14 +202,6 @@ const HeaderAdmin = () => {
       {/* HEADER */}
       <header className="flex items-center justify-between bg-white px-8 py-4 border-b border-gray-200 relative">
         <form onSubmit={handleSearch} className="relative w-1/3">
-          <RiSearchLine className="absolute left-3 top-3 text-gray-400 text-xl" />
-          <input
-            type="text"
-            placeholder="Buscar sección..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ec7c6a] outline-none"
-          />
         </form>
 
         <div

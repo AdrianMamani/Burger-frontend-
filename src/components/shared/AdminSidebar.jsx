@@ -145,11 +145,7 @@ const SidebarAdmin = () => {
                   </Link>
 
                   {item.subItems && item.subItems.length > 0 && (
-                    <ul
-                      className={`ml-10 mt-2 space-y-1 pr-2 ${
-                        item.subItems.length > 7 ? "max-h-48 overflow-y-auto custom-scroll" : ""
-                      }`}
-                    >
+                    <ul className="ml-10 mt-2 space-y-1 pr-2">
                       {item.subItems.map((sub, j) => (
                         <li key={j}>
                           <Link
