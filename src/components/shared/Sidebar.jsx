@@ -4,13 +4,43 @@ import { RiHome6Line } from "react-icons/ri";
 import { BsShieldCheck } from "react-icons/bs";
 import { FaBook } from "react-icons/fa";
 
+// ICONOS REDES
+import { FaFacebookF, FaInstagram } from "react-icons/fa";
+import { SiTiktok } from "react-icons/si";
+
 const Sidebar = ({ showMenu, darkMode }) => {
   const location = useLocation();
   const [active, setActive] = useState("/home");
 
+  // URLs redes desde API
+  const [redes, setRedes] = useState({
+    tiktok_url: "#",
+    facebook_url: "#",
+    instagram_url: "#",
+  });
+
   useEffect(() => {
     setActive(location.pathname);
   }, [location.pathname]);
+
+  // 📌 Obtener datos de la API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("https://apiricoton.cartavirtual.shop/api/empresa");
+        const data = await res.json();
+        setRedes({
+          tiktok_url: data.tiktok_url ?? "#",
+          facebook_url: data.facebook_url ?? "#",
+          instagram_url: data.instagram_url ?? "#",
+        });
+      } catch (error) {
+        console.log("Error cargando redes sociales", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const bgSidebar = "bg-[#141414]";
   const bgItemHover = darkMode ? "hover:bg-[#262837]" : "hover:bg-gray-100";
@@ -26,10 +56,11 @@ const Sidebar = ({ showMenu, darkMode }) => {
 
   return (
     <div
-      className={`${bgSidebar} fixed lg:left-0 top- w-28 h-full flex flex-col justify-between py-16 z-50 transition-all ${
+      className={`${bgSidebar} fixed lg:left-0 top-0 w-28 h-full flex flex-col justify-between py-16 z-50 transition-all ${
         showMenu ? "left-0" : "-left-full"
       }`}
     >
+      {/* MENU PRINCIPAL */}
       <div>
         <ul className="pl-4 flex flex-col gap-6">
           {menuItems.map((item, index) => {
@@ -66,6 +97,39 @@ const Sidebar = ({ showMenu, darkMode }) => {
             );
           })}
         </ul>
+      </div>
+
+      {/* REDES SOCIALES – DEBAJO DEL TODO */}
+      <div className="flex flex-col items-center gap-4 mb-4">
+        {/* TikTok */}
+        <a
+          href={redes.tiktok_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-110 transition"
+        >
+          <SiTiktok className="text-black text-xl" />
+        </a>
+
+        {/* Facebook */}
+        <a
+          href={redes.facebook_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-110 transition"
+        >
+          <FaFacebookF className="text-blue-600 text-xl" />
+        </a>
+
+        {/* Instagram */}
+        <a
+          href={redes.instagram_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-110 transition"
+        >
+          <FaInstagram className="text-pink-600 text-xl" />
+        </a>
       </div>
     </div>
   );
