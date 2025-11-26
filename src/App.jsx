@@ -21,14 +21,8 @@ import TerminosAdmin from "./pages/admin/terminos/pages/TerminosAdmin";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
-  const [cart, setCart] = useState([]); // carrito global
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
-
-  useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const [cart, setCart] = useState([]);
+  const isSmallScreen = window.innerWidth <= 768;
 
   const addToCart = (product) => {
     setCart((prev) => {
@@ -44,35 +38,9 @@ function App() {
     });
   };
 
-  // Componente para bloquear acceso desde móviles
-  const OnlyDesktop = ({ children }) => {
-    if (!isDesktop) {
-      return (
-        <div
-          style={{
-            height: "100vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            textAlign: "center",
-            background: "#000",
-            color: "#fff",
-            flexDirection: "column",
-            padding: "1rem",
-          }}
-        >
-          <h2>Acceso no disponible</h2>
-          <p>Este módulo no esta disponible para celulares.</p>
-        </div>
-      );
-    }
-    return children;
-  };
-
   return (
     <Router>
       <Routes>
-        {/* Redirige "/" a "/home" */}
         <Route path="/" element={<Navigate to="/home" />} />
 
         {/* Sitio público */}
@@ -84,90 +52,107 @@ function App() {
         <Route path="/politicas" element={<Politica />} />
         <Route path="/profile_empresa" element={<Profile_empresa />} />
 
-        {/* Login restringido solo a PC/Laptop */}
+        {/* Login – prohibido en pantallas pequeñas */}
         <Route
           path="/login"
-          element={
-            <OnlyDesktop>
-              <Login />
-            </OnlyDesktop>
-          }
+          element={ isSmallScreen ? <Navigate to="/home" replace /> : <Login /> }
         />
 
-        {/* Panel administrador protegido y solo accesible desde PC/Laptop */}
+        {/* ADMIN – todas redirigen a home en móviles */}
         <Route
           path="/admin/dashboard"
           element={
-            <OnlyDesktop>
+            isSmallScreen ? (
+              <Navigate to="/home" replace />
+            ) : (
               <PrivateRoute>
                 <Dashboard />
               </PrivateRoute>
-            </OnlyDesktop>
+            )
           }
         />
+
         <Route
           path="/admin/categorias"
           element={
-            <OnlyDesktop>
+            isSmallScreen ? (
+              <Navigate to="/home" replace />
+            ) : (
               <PrivateRoute>
                 <CategoriaAdmin />
               </PrivateRoute>
-            </OnlyDesktop>
+            )
           }
         />
+
         <Route
           path="/admin/categorias/:id_categoria"
           element={
-            <OnlyDesktop>
+            isSmallScreen ? (
+              <Navigate to="/home" replace />
+            ) : (
               <PrivateRoute>
                 <ProductoAdmin />
               </PrivateRoute>
-            </OnlyDesktop>
+            )
           }
         />
+
         <Route
           path="/admin/profile"
           element={
-            <OnlyDesktop>
+            isSmallScreen ? (
+              <Navigate to="/home" replace />
+            ) : (
               <PrivateRoute>
                 <Profile />
               </PrivateRoute>
-            </OnlyDesktop>
+            )
           }
         />
+
         <Route
           path="/admin/cupon"
           element={
-            <OnlyDesktop>
+            isSmallScreen ? (
+              <Navigate to="/home" replace />
+            ) : (
               <PrivateRoute>
                 <Cupon />
               </PrivateRoute>
-            </OnlyDesktop>
+            )
           }
         />
+
         <Route
           path="/admin/politicas"
           element={
-            <OnlyDesktop>
+            isSmallScreen ? (
+              <Navigate to="/home" replace />
+            ) : (
               <PrivateRoute>
                 <PoliticaAdmin />
               </PrivateRoute>
-            </OnlyDesktop>
+            )
           }
         />
+
         <Route
           path="/admin/terminos"
           element={
-            <OnlyDesktop>
+            isSmallScreen ? (
+              <Navigate to="/home" replace />
+            ) : (
               <PrivateRoute>
                 <TerminosAdmin />
               </PrivateRoute>
-            </OnlyDesktop>
+            )
           }
         />
       </Routes>
     </Router>
   );
 }
+
 
 export default App;

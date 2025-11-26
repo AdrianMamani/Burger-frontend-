@@ -14,6 +14,7 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
   });
 
   const [loading, setLoading] = useState(false);
+  const [priceError, setPriceError] = useState("");
 
   // Carga datos si edita
   useEffect(() => {
@@ -39,6 +40,15 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
+    // Validación precio mayor a 0
+    if (name === "price") {
+      if (Number(value) <= 0) {
+        setPriceError("El precio debe ser mayor a 0");
+      } else {
+        setPriceError("");
+      }
+    }
+
     if (name === "imageFile" && files.length > 0) {
       const file = files[0];
       setFormData({
@@ -53,6 +63,13 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Bloquea envío si el precio no es válido
+    if (Number(formData.price) <= 0) {
+      setPriceError("El precio debe ser mayor a 0");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -85,16 +102,17 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
       try {
         data = JSON.parse(text);
       } catch {
-        swal("Error", "El servidor no devolvió JSON.", "error");
         setLoading(false);
+        setPriceError("Error: el servidor no devolvió una respuesta válida.");
         return;
       }
 
       if (!response.ok) {
-        swal("Error", data.message || "Ocurrió un error al guardar el producto", "error");
+        setPriceError(data.message || "Ocurrió un error al guardar el producto");
         return;
       }
 
+      // 🟢 Solo mantiene SweetAlert para éxito
       swal(
         "Éxito",
         isEditMode ? "Producto actualizado correctamente" : "Producto creado correctamente",
@@ -113,7 +131,7 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
 
       if (onSuccess) onSuccess({ ...data, isCreate: !isEditMode });
     } catch (error) {
-      swal("Error de conexión", error.message, "error");
+      setPriceError("Error de conexión: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -152,15 +170,23 @@ const ProductoForm = ({ initialData = null, categoryId, onCancel, onSuccess }) =
         {/* 💲 Precio */}
         <label className="block">
           <span className="text-gray-700 font-medium">Precio</span>
+
           <input
             type="number"
             name="price"
             value={formData.price}
             onChange={handleChange}
             step="0.01"
-            className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
+            min="0.01"
+            className={`mt-1 w-full border rounded-lg p-2 focus:ring ${
+              priceError ? "border-red-500" : "focus:ring-blue-300"
+            }`}
             required
           />
+
+          {priceError && (
+            <p className="text-red-500 text-sm mt-1">{priceError}</p>
+          )}
         </label>
 
         {/* 🖼 Imagen */}

@@ -11,7 +11,6 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
   const textDefault = darkMode ? "text-gray-300" : "text-gray-900";
 
   const [paso, setPaso] = useState(1);
-
   const [metodoPago, setMetodoPago] = useState("efectivo");
   const [tipoEntrega, setTipoEntrega] = useState("recojo");
   const [nombre, setNombre] = useState("");
@@ -42,9 +41,7 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
   const subtotal = cart
     .reduce(
       (acc, p) =>
-        acc +
-        (p.precio * p.cantidad -
-          (p.descuento || 0) * p.cantidad),
+        acc + (Number(p.precio) - Number(p.descuento || 0)) * p.cantidad,
       0
     )
     .toFixed(2);
@@ -79,10 +76,8 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
     mensaje += `%0A--- Productos --- %0A`;
 
     cart.forEach((p) => {
-      mensaje += `• ${p.nombre} x${p.cantidad} - S/. ${(
-        p.precio * p.cantidad -
-        (p.descuento || 0) * p.cantidad
-      ).toFixed(2)}%0A`;
+      const precioFinal = Number(p.precio) - Number(p.descuento || 0);
+      mensaje += `• ${p.nombre} x${p.cantidad} - S/. ${(precioFinal * p.cantidad).toFixed(2)}%0A`;
     });
 
     mensaje += `%0ATotal: S/. ${subtotal}`;
@@ -127,14 +122,12 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
           {paso === 1 ? "Mi Carrito" : "Método de pago y entrega"}
         </h1>
 
-        {/* AREA SCROLL */}
         <div
           className={`flex-1 ${
             cart.length === 0 ? "overflow-hidden" : "overflow-y-auto"
           } pr-2`}
           style={{ paddingBottom: cart.length === 0 ? "0px" : "140px" }}
         >
-          {/* CARRITO VACÍO */}
           {paso === 1 && cart.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full">
               <img
@@ -148,74 +141,77 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
             </div>
           )}
 
-          {/* PASO 1 – CARRITO */}
           {paso === 1 && cart.length > 0 && (
             <>
-              {cart.map((product) => (
-                <div
-                  key={product.id_producto}
-                  className={`${bgProduct} p-4 rounded-xl flex flex-col gap-3 mb-3`}
-                >
-                  <div className="flex gap-4">
-                    <img
-                      src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
-                      className="w-28 h-24 object-cover rounded-lg"
-                      alt={product.nombre}
-                    />
+              {cart.map((product) => {
+                const precioUnidad = Number(product.precio) || 0;
+                const precioConDescuentoUnidad =
+                  Number(product.precio) - Number(product.descuento || 0);
+                const totalProducto =
+                  precioConDescuentoUnidad * product.cantidad;
 
-                    <div className="flex flex-col justify-between">
-                      {/* 🔥 NOMBRE DEL PRODUCTO */}
-                      <p className="font-bold text-lg">{product.nombre}</p>
+                return (
+                  <div
+                    key={product.id_producto}
+                    className={`${bgProduct} p-4 rounded-xl flex flex-col gap-3 mb-3`}
+                  >
+                    <div className="flex gap-4">
+                      <img
+                        src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
+                        className="w-28 h-24 object-cover rounded-lg"
+                        alt={product.nombre}
+                      />
 
-                      {/* 🔥 PRECIO CORREGIDO */}
-                      {product.descuento ? (
-                        <div className="flex flex-col">
-                          <p className="text-sm line-through opacity-70">
-                            S/. {(product.precio * product.cantidad).toFixed(2)}
-                          </p>
-                          <p className="font-bold text-green-500">
-                            S/. {(
-                              product.precio * product.cantidad -
-                              product.descuento * product.cantidad
-                            ).toFixed(2)}
-                          </p>
-                          <p className="text-green-500 text-xs">
-                            -S/. {(product.descuento * product.cantidad).toFixed(2)} total
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="font-bold">
-                          S/. {(product.precio * product.cantidad).toFixed(2)}
-                        </p>
-                      )}
+                      <div className="flex flex-col justify-between">
+                        <p className="font-bold text-lg">{product.nombre}</p>
+
+                        {product.descuento ? (
+                          <div className="flex flex-col">
+                            <p className="font-bold text-green-500">
+                              S/. {precioConDescuentoUnidad.toFixed(2)} x Und
+                            </p>
+
+                            <p className="font-bold mt-1">
+                              Total: S/. {totalProducto.toFixed(2)}
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm opacity-80">
+                              S/. {precioUnidad.toFixed(2)} x Und
+                            </p>
+                            <p className="font-bold">
+                              Total: S/. {(precioUnidad * product.cantidad).toFixed(2)}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <button onClick={() => increaseQty(product.id_producto)}>
+                        <FaPlusCircle size={22} />
+                      </button>
+                      <span className="px-3 py-1 bg-black text-white rounded-lg text-lg font-semibold">
+                        {product.cantidad}
+                      </span>
+                      <button onClick={() => decreaseQty(product.id_producto)}>
+                        <FaMinusCircle size={22} />
+                      </button>
+
+                      <button
+                        onClick={() => removeProduct(product.id_producto)}
+                        className="bg-red-600 text-white py-1 px-4 rounded-full ml-4 font-semibold hover:bg-red-700"
+                      >
+                        Eliminar
+                      </button>
                     </div>
                   </div>
-
-                  {/* CANTIDAD */}
-                  <div className="flex items-center gap-4">
-                    <button onClick={() => increaseQty(product.id_producto)}>
-                      <FaPlusCircle size={22} />
-                    </button>
-                    <span className="px-3 py-1 bg-black text-white rounded-lg text-lg font-semibold">
-                      {product.cantidad}
-                    </span>
-                    <button onClick={() => decreaseQty(product.id_producto)}>
-                      <FaMinusCircle size={22} />
-                    </button>
-
-                    <button
-                      onClick={() => removeProduct(product.id_producto)}
-                      className="bg-red-600 text-white py-1 px-4 rounded-full ml-4 font-semibold hover:bg-red-700"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </>
           )}
 
-          {/* PASO 2 – DATOS */}
           {paso === 2 && (
             <div className={`${bgProduct} p-4 rounded-lg`}>
               <h2 className="font-semibold mb-2">Método de pago</h2>
@@ -230,8 +226,10 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
                   <button
                     key={m.id}
                     onClick={() => setMetodoPago(m.id)}
-                    className={`p-2 rounded-lg hover:scale-110 transition ${
-                      metodoPago === m.id ? "bg-white" : "bg-gray-100"
+                    className={`p-2 rounded-lg transition ${
+                      metodoPago === m.id
+                        ? "bg-white border-2 border-orange-500"
+                        : "bg-gray-100 border-2 border-transparent"
                     }`}
                   >
                     <img src={m.img} className="w-10 h-10" alt={m.id} />
@@ -326,7 +324,6 @@ const Car = ({ showOrder, setShowOrder, darkMode, cart, setCart }) => {
           )}
         </div>
 
-        {/* FOOTER */}
         {cart.length > 0 && (
           <div className="absolute bottom-0 left-0 w-full p-4 bg-white shadow-2xl flex flex-col gap-3">
             {paso === 1 ? (

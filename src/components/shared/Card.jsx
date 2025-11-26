@@ -1,9 +1,7 @@
-// 🔥 CÓDIGO COMPLETO DE Card.jsx CON BANNER SOLO EN CELULAR
-
 import React, { useState, useEffect } from "react";
 import { FaShoppingCart } from "react-icons/fa";
-import { IoIosArrowBack } from "react-icons/io";
 import { TbDiscount2 } from "react-icons/tb";
+import { RiCloseLine } from "react-icons/ri";
 
 const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -21,7 +19,7 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
         const data = await res.json();
         setCupones(data);
       } catch (err) {
-        console.error("❌ Error al obtener cupones:", err);
+        console.error("Error al obtener cupones:", err);
       }
     };
     fetchCupones();
@@ -48,7 +46,7 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
         if (!found) throw new Error("Categoría no encontrada");
         setCategoryInfo(found);
       } catch (err) {
-        setError(`Error al obtener la categoría: ${err.message}`);
+        setError(`Error al obtener categoría: ${err.message}`);
         setCategoryInfo(null);
       }
     };
@@ -85,23 +83,16 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
         </div>
       )}
 
-      {/* 🔥 BANNER SOLO EN CELULAR */}
       {categoryInfo?.imagen_url && (
         <div className="w-full mb-6 block md:hidden">
           <img
             src={`https://apiricoton.cartavirtual.shop/${categoryInfo.imagen_url}`}
-            className="
-              w-full 
-              h-48 
-              object-cover 
-              rounded-xl
-            "
+            className="w-full h-48 object-cover rounded-xl"
             alt={categoryInfo.nombre}
           />
         </div>
       )}
 
-      {/* 🔥 SOLO NOMBRE + DESCRIPCIÓN */}
       {categoryInfo && (
         <div className="px-4 mb-6">
           <h2 className="text-2xl md:text-4xl font-extrabold">
@@ -116,7 +107,6 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
         </div>
       )}
 
-      {/* 🔥 PRODUCTOS */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 px-2 sm:px-3">
         {products.map((product) => {
           const cup = obtenerDescuento(product);
@@ -198,7 +188,6 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
         })}
       </div>
 
-      {/* 🔥 MODAL */}
       {selectedProduct && (
         <>
           <div
@@ -211,16 +200,14 @@ const Card = ({ darkMode, products, addToCart, selectedCategory }) => {
               darkMode ? "bg-[#1F1D2B] text-gray-300" : "bg-white text-gray-900"
             } w-full max-w-[420px]`}
           >
-            <div className="flex items-center px-5 py-4 lg:hidden">
-              <button
-                onClick={closeModal}
-                className="absolute top-4 left-4 z-[999] bg-black/50 hover:bg-black/70 text-white p-2 rounded-full shadow-lg md:hidden"
-              >
-                <IoIosArrowBack size={24} />
-              </button>
-            </div>
+            <button
+              onClick={closeModal}
+              className="absolute top-4 left-4 z-[999] text-black"
+            >
+              <RiCloseLine size={32} />
+            </button>
 
-            <div className="flex flex-col items-center px-6">
+            <div className="flex flex-col items-center px-6 pt-14">
               <div className="w-full flex justify-center items-center mt-4">
                 <img
                   src={`https://apiricoton.cartavirtual.shop/${selectedProduct.imagen_url}`}

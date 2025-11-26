@@ -43,9 +43,9 @@ const Sidebar = ({ showMenu, darkMode }) => {
   }, []);
 
   const bgSidebar = "bg-[#141414]";
-  const bgItemHover = darkMode ? "hover:bg-[#262837]" : "hover:bg-gray-100";
+  const bgItemHover = darkMode ? "hover:bg-[#262837]" : "hover:bg-white";
   const iconColor = "text-[#F0320C]";
-  const bgActive = darkMode ? "bg-[#262837]" : "bg-gray-100";
+  const bgActive = darkMode ? "bg-[#262837]" : "bg-white";
   const bgButtonActive = "bg-[#F0320C] text-white";
 
   const menuItems = [

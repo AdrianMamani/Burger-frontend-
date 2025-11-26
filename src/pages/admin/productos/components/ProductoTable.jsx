@@ -16,7 +16,6 @@ const ProductoTable = ({ search, refreshTrigger }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🟦 Obtener productos
   const fetchProductos = async () => {
     setLoading(true);
     try {
@@ -35,12 +34,10 @@ const ProductoTable = ({ search, refreshTrigger }) => {
     }
   };
 
-  // 🔄 Cargar cuando inicia o cuando hay refresh
   useEffect(() => {
     fetchProductos();
   }, [refreshTrigger, categoryId]);
 
-  // 🔍 Filtro de búsqueda
   useEffect(() => {
     if (!search.trim()) {
       setFilteredProducts(productos);
@@ -52,7 +49,6 @@ const ProductoTable = ({ search, refreshTrigger }) => {
     }
   }, [search, productos]);
 
-  // ✏️ Editar
   const handleEdit = (product) => {
     setSelectedProduct({
       id_producto: product.id_producto,
@@ -63,7 +59,6 @@ const ProductoTable = ({ search, refreshTrigger }) => {
     });
   };
 
-  // 🗑️ Eliminar
   const handleDelete = async (id) => {
     const confirm = await swal({
       title: "¿Eliminar producto?",
@@ -89,33 +84,29 @@ const ProductoTable = ({ search, refreshTrigger }) => {
     }
   };
 
-  // Guardar → refrescar tabla
   const handleSave = () => {
     fetchProductos();
     setSelectedProduct(null);
   };
 
-  // Bloquea scroll si modal está abierto
   useEffect(() => {
     document.body.style.overflow = selectedProduct ? "hidden" : "auto";
     return () => (document.body.style.overflow = "auto");
   }, [selectedProduct]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full max-w-full overflow-x-hidden">
       {loading ? (
         <p className="text-gray-500">Cargando productos...</p>
       ) : (
-        // ⭐⭐⭐⭐ CUATRO TARJETAS POR FILA ⭐⭐⭐⭐
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => (
               <motion.div
                 key={product.id_producto}
-                className="bg-white rounded-xl flex flex-col overflow-hidden shadow-md h-[380px] border"
+                className="bg-white rounded-xl flex flex-col overflow-hidden shadow-md border max-w-full min-h-0 h-[380px]"
                 whileHover={{ scale: 1.02 }}
               >
-                {/* Imagen tamaño fijo */}
                 <div className="w-full h-40 bg-gray-100 overflow-hidden">
                   <img
                     src={`https://apiricoton.cartavirtual.shop/${product.imagen_url}`}
@@ -124,14 +115,12 @@ const ProductoTable = ({ search, refreshTrigger }) => {
                   />
                 </div>
 
-                {/* Contenido */}
-                <div className="p-4 flex flex-col justify-between flex-1">
+                <div className="p-4 flex flex-col justify-between flex-1 min-h-0">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
                       {product.nombre}
                     </h3>
 
-                    {/* ⭐ Descripción corta con ... */}
                     <p className="text-sm text-gray-500 line-clamp-2 min-h-[36px]">
                       {product.descripcion || "Sin descripción"}
                     </p>
@@ -141,7 +130,6 @@ const ProductoTable = ({ search, refreshTrigger }) => {
                     </p>
                   </div>
 
-                  {/* Acciones */}
                   <div className="mt-3 flex justify-end items-center pt-2 border-t border-gray-200 space-x-4">
                     <motion.button
                       onClick={() => handleEdit(product)}
@@ -170,11 +158,9 @@ const ProductoTable = ({ search, refreshTrigger }) => {
         </div>
       )}
 
-      {/* Modal lateral de edición */}
       <AnimatePresence>
         {selectedProduct && (
           <>
-            {/* Fondo */}
             <motion.div
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
               initial={{ opacity: 0 }}
@@ -183,9 +169,15 @@ const ProductoTable = ({ search, refreshTrigger }) => {
               onClick={() => setSelectedProduct(null)}
             />
 
-            {/* Panel */}
             <motion.div
-              className="fixed right-0 top-0 h-full w-full sm:w-2/5 bg-white shadow-2xl z-50 p-6 overflow-y-auto"
+              className="
+                fixed right-0 top-0 h-full 
+                w-full 
+                sm:w-[55%] 
+                lg:w-[40%] 
+                bg-white shadow-2xl z-50 
+                p-6 overflow-y-auto
+              "
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}

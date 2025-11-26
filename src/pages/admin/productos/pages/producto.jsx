@@ -10,32 +10,28 @@ const ProductPage = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [empresaNombre, setEmpresaNombre] = useState("Bembos");
   const [searchTerm, setSearchTerm] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0); // 🔄 recargar tabla al crear/editar
+  const [refreshKey, setRefreshKey] = useState(0);
   const [categoriaNombre, setCategoriaNombre] = useState("");
 
+  const { id_categoria } = useParams();
 
-  const { id_categoria } = useParams(); // obtiene la categoría actual desde la URL
-
+  // Obtener nombre de categoría actual
   useEffect(() => {
-  const fetchCategoriaNombre = async () => {
-    try {
-      const res = await fetch("https://apiricoton.cartavirtual.shop/api/categorias");
-      const data = await res.json();
+    const fetchCategoriaNombre = async () => {
+      try {
+        const res = await fetch("https://apiricoton.cartavirtual.shop/api/categorias");
+        const data = await res.json();
 
-      const categoria = data.find(
-        (c) => c.id_categoria == id_categoria
-      );
+        const categoria = data.find((c) => c.id_categoria == id_categoria);
+        if (categoria) setCategoriaNombre(categoria.nombre);
+      } catch (error) {
+        console.error("Error al obtener categoría:", error);
+      }
+    };
+    fetchCategoriaNombre();
+  }, [id_categoria]);
 
-      if (categoria) setCategoriaNombre(categoria.nombre);
-    } catch (error) {
-      console.error("Error al obtener categoría:", error);
-    }
-  };
-
-  fetchCategoriaNombre();
-}, [id_categoria]);
-
-  // 🟦 Obtener nombre de la empresa
+  // Nombre empresa
   useEffect(() => {
     const fetchEmpresa = async () => {
       try {
@@ -49,12 +45,12 @@ const ProductPage = () => {
     fetchEmpresa();
   }, []);
 
-  // 🟦 Cambiar título del navegador
+  // Título navegador
   useEffect(() => {
     document.title = `${empresaNombre} - Administrador/Productos`;
   }, [empresaNombre]);
 
-  // 🟦 Colocar favicon
+  // Favicon
   useEffect(() => {
     let link = document.querySelector("link[rel*='icon']");
     if (!link) {
@@ -65,7 +61,7 @@ const ProductPage = () => {
     link.href = "/menu.png";
   }, []);
 
-  // 🟩 Recargar tabla al guardar o editar
+  // Refrescar tabla
   const handleSaveProduct = () => {
     setRefreshKey((prev) => prev + 1);
     setIsModalOpen(false);
@@ -74,47 +70,52 @@ const ProductPage = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="w-64 bg-gray-800 text-white flex-shrink-0">
+
+      {/* SIDEBAR — ahora colapsa en tablet */}
+      <div className="hidden md:block w-64 bg-gray-800 text-white flex-shrink-0">
         <Sidebar />
       </div>
 
-      {/* Main */}
+      {/* MAIN */}
       <div className="flex-grow flex flex-col">
         <HeaderAdmin />
 
-        <main className="flex-grow p-8 overflow-y-auto relative">
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">
+        <main className="flex-grow p-4 md:p-8 overflow-y-auto relative">
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">
               {categoriaNombre || "Productos"}
             </h1>
 
-            {/* 🔍 Barra de búsqueda + botón */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 mb-8">
-              <div className="w-full sm:w-[85%]">
+            {/* 🔍 BUSCADOR + BOTÓN RESPONSIVE */}
+            <div className="flex flex-col md:flex-row md:items-center md:gap-6 mb-8">
+
+              <div className="w-full md:w-[85%]">
                 <input
                   type="text"
                   placeholder="Buscar producto..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full shadow-sm 
+                             focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
 
-              <div className="w-full sm:w-[15%]">
+              <div className="w-full md:w-[15%] mt-4 md:mt-0">
                 <button
                   onClick={() => {
                     setEditingProduct(null);
                     setIsModalOpen(true);
                   }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg shadow-md transition w-full"
+                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 
+                             rounded-lg shadow-md transition w-full"
                 >
                   + Nuevo producto
                 </button>
               </div>
             </div>
 
-            {/* 🗂 Tabla de productos */}
+            {/* 🗂 TABLA */}
             <ProductoTable
               search={searchTerm}
               refreshTrigger={refreshKey}
@@ -126,14 +127,14 @@ const ProductPage = () => {
             />
           </div>
 
-          {/* Modal lateral */}
+          {/* MODAL LATERAL */}
           <NewProducto
-  isOpen={isModalOpen}
-  onClose={() => setIsModalOpen(false)}
-  initialData={editingProduct}
-  categoryId={id_categoria}
-  onSuccess={handleSaveProduct}  // 🚀 ESTA ES LA CLAVE
-/>
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            initialData={editingProduct}
+            categoryId={id_categoria}
+            onSuccess={handleSaveProduct}
+          />
         </main>
       </div>
     </div>

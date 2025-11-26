@@ -13,7 +13,7 @@ const RightModal = ({ isOpen, onClose, onSuccess, initialData }) => {
       ></div>
 
       {/* Contenedor lateral derecho */}
-      <div className="relative ml-auto w-1/4 h-full bg-white shadow-2xl p-6 animate-slideIn">
+      <div className="relative ml-auto w-1/3 h-full bg-white shadow-2xl p-6 animate-slideIn">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
             {initialData ? "Editar Cupón" : "Nuevo Cupón"}

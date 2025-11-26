@@ -2,12 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { RiSearch2Line, RiWhatsappFill } from "react-icons/ri";
 import { FaBars } from "react-icons/fa";
 import { Link } from "react-router-dom";
-
-// ICONOS
-import { PiHamburgerFill } from "react-icons/pi"; // INICIO
-import { FaUserCircle } from "react-icons/fa"; // PERFIL
-import { RiGitRepositoryPrivateFill } from "react-icons/ri"; // POLÍTICAS
-import { LuFileAudio } from "react-icons/lu"; // TÉRMINOS
+import { PiHamburgerFill } from "react-icons/pi";
+import { FaUserCircle } from "react-icons/fa";
+import { RiGitRepositoryPrivateFill } from "react-icons/ri";
+import { LuFileAudio } from "react-icons/lu";
 
 const Header = ({
   darkMode,
@@ -34,7 +32,7 @@ const Header = ({
     fetch("https://apiricoton.cartavirtual.shop/api/categorias")
       .then((res) => res.json())
       .then((data) => setCategories(data))
-      .catch((err) => console.error("Error fetching categories:", err));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -48,7 +46,7 @@ const Header = ({
             telefono: data.telefono || "",
           });
       })
-      .catch((err) => console.error("Error fetching empresa:", err));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -74,7 +72,6 @@ const Header = ({
 
   return (
     <header>
-      {/* Nombre centrado en móvil */}
       {!showOrder && (
         <div
           className={`md:hidden absolute top-0 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center
@@ -98,23 +95,25 @@ const Header = ({
 
       <div className="md:hidden h-16" />
 
-      {/* Bienvenida + buscador */}
       <div
         className={`flex flex-col md:flex-row md:justify-between md:items-center gap-6 mb-6 
           md:bg-transparent md:rounded-none ${darkMode ? "text-gray-300" : "text-black"}`}
       >
-        {/* SOLO PC */}
         <div className="pt-2 hidden md:block">
           <h1
-            className={`uppercase martian-mono ${darkMode ? "text-gray-200" : "text-black"}`}
-            style={{ fontSize: "32px", lineHeight: "32px" }}
+            className={`uppercase martian-mono whitespace-nowrap truncate max-w-[600px] ${
+              darkMode ? "text-gray-200" : "text-black"
+            }`}
+            style={{ fontSize: "26px", lineHeight: "32px" }}
           >
             Bienvenidos a {empresa.nombre}
           </h1>
 
           {empresa.horario && (
             <p
-              className={`mt-2 ${darkMode ? "text-gray-400" : "text-gray-700"}`}
+              className={`mt-2 whitespace-nowrap truncate max-w-[600px] ${
+                darkMode ? "text-gray-400" : "text-gray-700"
+              }`}
               style={{ fontSize: "18px" }}
             >
               Atendemos de {empresa.horario}
@@ -122,7 +121,6 @@ const Header = ({
           )}
         </div>
 
-        {/* BUSCADOR */}
         <div className="flex items-center gap-3 px-2 md:px-0">
           <button
             onClick={() => setOpenModal(true)}
@@ -153,12 +151,10 @@ const Header = ({
         </div>
       </div>
 
-      {/* MODAL MOBILE */}
       {openModal && (
         <div className="md:hidden fixed inset-0 bg-black bg-opacity-40 z-[999]">
           <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl p-6 flex flex-col justify-between animate-slide-right">
 
-            {/* CONTENIDO PRINCIPAL */}
             <div className="flex flex-col gap-4">
               <button className="self-end text-black text-xl" onClick={() => setOpenModal(false)}>
                 ✕
@@ -201,7 +197,6 @@ const Header = ({
               </Link>
             </div>
 
-            {/* FOOTER DEL MODAL */}
             <div className="text-center mt-6 mb-2">
               <p className="text-black font-semibold text-sm mb-2">¿Tienes alguna queja?</p>
 

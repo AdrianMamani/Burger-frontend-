@@ -21,11 +21,14 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
   const [allProductos, setAllProductos] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Estado de verificación automática
+  // errores por input
+  const [errors, setErrors] = useState({});
+
+  // verificación del código existente
   const [verificando, setVerificando] = useState(false);
   const [codigoValido, setCodigoValido] = useState(null);
 
-  // --- Cargar datos iniciales ---
+  // cargar datos iniciales
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -37,14 +40,16 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
         fecha_inicio: initialData.fecha_inicio
           ? initialData.fecha_inicio.split("T")[0]
           : "",
-        fecha_fin: initialData.fecha_fin ? initialData.fecha_fin.split("T")[0] : "",
+        fecha_fin: initialData.fecha_fin
+          ? initialData.fecha_fin.split("T")[0]
+          : "",
         cantidad_total: initialData.cantidad_total || "",
       });
       setCodigoValido(true);
     }
   }, [initialData]);
 
-  // --- Cargar categorías y productos ---
+  // cargar categorías y productos
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -61,13 +66,12 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
         setAllProductos(prodData || []);
       } catch (error) {
         console.error("Error cargando datos:", error);
-        swal("Error", "No se pudieron cargar categorías o productos", "error");
       }
     };
     fetchData();
   }, []);
 
-  // --- Verificar código automáticamente con debounce ---
+  // verificación de código
   useEffect(() => {
     if (!formData.codigo.trim()) {
       setCodigoValido(null);
@@ -76,6 +80,7 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
 
     const delay = setTimeout(async () => {
       setVerificando(true);
+
       try {
         const res = await fetch("https://apiricoton.cartavirtual.shop/api/cupon");
         const data = await res.json();
@@ -93,14 +98,16 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
       } finally {
         setVerificando(false);
       }
-    }, 600); // debounce de 0.6 segundos
+    }, 600);
 
     return () => clearTimeout(delay);
   }, [formData.codigo]);
 
-  // --- Manejar cambios ---
+  // manejar cambios
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    setErrors({ ...errors, [name]: null });
 
     if (name === "id_categoria") {
       if (value === "") {
@@ -111,13 +118,15 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
         );
         setProductos(filtrados);
       }
+
       setFormData({ ...formData, [name]: value, id_producto: "" });
-    } else {
-      setFormData({ ...formData, [name]: value });
+      return;
     }
+
+    setFormData({ ...formData, [name]: value });
   };
 
-  // --- Cambiar tipo ---
+  // cambiar tipo
   const toggleTipo = () => {
     setFormData({
       ...formData,
@@ -126,19 +135,37 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
     });
   };
 
-  // --- Enviar formulario ---
+  // validar campos
+  const validate = () => {
+    let newErrors = {};
+
+    if (!formData.codigo.trim()) newErrors.codigo = "El código es obligatorio";
+    if (!formData.valor) newErrors.valor = "El valor es obligatorio";
+    if (formData.tipo === "porcentaje" && Number(formData.valor) > 100)
+      newErrors.valor = "El porcentaje no puede superar 100";
+
+    if (!formData.fecha_inicio)
+      newErrors.fecha_inicio = "La fecha de inicio es obligatoria";
+
+    if (!formData.fecha_fin)
+      newErrors.fecha_fin = "La fecha de fin es obligatoria";
+
+    if (!formData.cantidad_total)
+      newErrors.cantidad_total = "La cantidad total es obligatoria";
+
+    if (!isEditMode && codigoValido === false)
+      newErrors.codigo = "El código ya existe";
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // enviar formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.tipo === "porcentaje" && Number(formData.valor) > 100) {
-      swal("Error", "El valor porcentual no puede ser mayor a 100", "error");
-      return;
-    }
-
-    if (!isEditMode && codigoValido === false) {
-      swal("Error", "Cupón ya existente", "error");
-      return;
-    }
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -167,7 +194,7 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        swal("Error", data.message || "Error al guardar el cupón", "error");
+        console.error("Error:", data);
         return;
       }
 
@@ -180,8 +207,7 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
       if (onSuccess) onSuccess(data);
       if (onCancel) onCancel();
     } catch (error) {
-      console.error("Error en la solicitud:", error);
-      swal("Error", "No se pudo conectar con el servidor", "error");
+      console.error("Error en servidor:", error);
     } finally {
       setLoading(false);
     }
@@ -189,25 +215,31 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-        {/* Código con verificación automática */}
-        <div className="block">
+
+      {/* Contenedor scroll */}
+      <div className="flex-1 overflow-y-auto space-y-4 pr-2 pb-20">
+
+        {/* Código */}
+        <div>
           <span className="text-gray-700 font-semibold">Código</span>
+
           <div className="flex items-center space-x-2 mt-1">
             <input
               type="text"
               name="codigo"
               value={formData.codigo}
               onChange={handleChange}
-              className={`w-full border rounded-lg p-2 focus:ring focus:ring-blue-300 ${
-                codigoValido === false
+              className={`w-full border rounded-lg p-2 ${
+                errors.codigo ? "border-red-500" : ""
+              } ${
+                codigoValido === false && !errors.codigo
                   ? "border-red-500"
                   : codigoValido === true
                   ? "border-green-500"
                   : ""
               }`}
-              required
             />
+
             {verificando ? (
               <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
             ) : codigoValido === true ? (
@@ -217,12 +249,8 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
             ) : null}
           </div>
 
-          {/* Texto auxiliar */}
-          {codigoValido === true && (
-            <p className="text-green-600 text-sm mt-1">Código disponible</p>
-          )}
-          {codigoValido === false && (
-            <p className="text-red-600 text-sm mt-1">El código ya existe</p>
+          {errors.codigo && (
+            <p className="text-red-600 text-sm mt-1">{errors.codigo}</p>
           )}
         </div>
 
@@ -231,6 +259,7 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
           <span className="text-gray-700 font-semibold">
             Tipo: {formData.tipo === "porcentaje" ? "Porcentaje" : "Monto"}
           </span>
+
           <button
             type="button"
             onClick={toggleTipo}
@@ -247,25 +276,30 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
         </div>
 
         {/* Valor */}
-        <label className="block">
+        <div>
           <span className="text-gray-700 font-semibold">
             Valor {formData.tipo === "porcentaje" ? "(%)" : "(S/)"}
           </span>
+
           <input
             type="number"
-            step="0.01"
             name="valor"
             value={formData.valor}
             onChange={handleChange}
-            max={formData.tipo === "porcentaje" ? "100" : undefined}
-            className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
-            required
+            className={`mt-1 w-full border rounded-lg p-2 ${
+              errors.valor ? "border-red-500" : ""
+            }`}
           />
-        </label>
+
+          {errors.valor && (
+            <p className="text-red-600 text-sm mt-1">{errors.valor}</p>
+          )}
+        </div>
 
         {/* Categoría */}
-        <label className="block">
+        <div>
           <span className="text-gray-700 font-semibold">Categoría (opcional)</span>
+
           <select
             name="id_categoria"
             value={formData.id_categoria || ""}
@@ -279,11 +313,12 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
         {/* Producto */}
-        <label className="block">
+        <div>
           <span className="text-gray-700 font-semibold">Producto (opcional)</span>
+
           <select
             name="id_producto"
             value={formData.id_producto || ""}
@@ -297,50 +332,71 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
         {/* Fechas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="block">
+          <div>
             <span className="text-gray-700 font-semibold">Fecha inicio</span>
+
             <input
               type="date"
               name="fecha_inicio"
               value={formData.fecha_inicio}
               onChange={handleChange}
-              className="mt-1 w-full border rounded-lg p-2"
-              required
+              className={`mt-1 w-full border rounded-lg p-2 ${
+                errors.fecha_inicio ? "border-red-500" : ""
+              }`}
             />
-          </label>
-          <label className="block">
+
+            {errors.fecha_inicio && (
+              <p className="text-red-600 text-sm mt-1">{errors.fecha_inicio}</p>
+            )}
+          </div>
+
+          <div>
             <span className="text-gray-700 font-semibold">Fecha fin</span>
+
             <input
               type="date"
               name="fecha_fin"
               value={formData.fecha_fin}
               onChange={handleChange}
-              className="mt-1 w-full border rounded-lg p-2"
-              required
+              className={`mt-1 w-full border rounded-lg p-2 ${
+                errors.fecha_fin ? "border-red-500" : ""
+              }`}
             />
-          </label>
+
+            {errors.fecha_fin && (
+              <p className="text-red-600 text-sm mt-1">{errors.fecha_fin}</p>
+            )}
+          </div>
         </div>
 
         {/* Cantidad total */}
-        <label className="block">
+        <div>
           <span className="text-gray-700 font-semibold">Cantidad total</span>
+
           <input
             type="number"
             name="cantidad_total"
             value={formData.cantidad_total}
             onChange={handleChange}
-            className="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-blue-300"
-            required
+            className={`mt-1 w-full border rounded-lg p-2 ${
+              errors.cantidad_total ? "border-red-500" : ""
+            }`}
           />
-        </label>
+
+          {errors.cantidad_total && (
+            <p className="text-red-600 text-sm mt-1">
+              {errors.cantidad_total}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Botones */}
-      <div className="border-t pt-4 mt-4 flex justify-end space-x-3 bg-white sticky bottom-0">
+      {/* Botones más arriba */}
+      <div className="border-t py-3 flex justify-end gap-3 bg-white sticky bottom-0 z-20">
         <button
           type="button"
           onClick={onCancel}
@@ -349,6 +405,7 @@ const CuponForm = ({ initialData = null, onCancel, onSuccess }) => {
         >
           Cancelar
         </button>
+
         <button
           type="submit"
           className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
